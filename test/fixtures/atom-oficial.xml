@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>Órgão Oficial</title>
+  <entry>
+    <title type="html">PEC da escala 6x1 &#233; aprovada no Senado e vai ao segundo turno</title>
+    <link rel="alternate" href="https://oficial.exemplo/noticias/pec-6x1-aprovada"/>
+    <link rel="enclosure" href="https://oficial.exemplo/foto.jpg"/>
+    <id>tag:oficial.exemplo,2026:1</id>
+    <updated>2026-10-28T15:10:00Z</updated>
+    <summary>Proposta reduz a jornada m&aacute;xima de trabalho.</summary>
+  </entry>
+  <entry>
+    <title>Câmara instala comissão para analisar orçamento de 2027</title>
+    <link href="/noticias/orcamento-2027"/>
+    <updated>2026-10-28T13:00:00Z</updated>
+  </entry>
+</feed>

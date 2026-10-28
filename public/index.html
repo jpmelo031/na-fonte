@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Na Fonte</title>
+  <meta name="description" content="Notícias de fontes confiáveis, checagens e um filtro rápido contra boatos, num lugar só.">
+  <meta name="theme-color" content="#0f766e">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icone.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icone.svg">
+  <link rel="stylesheet" href="estilo.css">
+  <script src="app.js" type="module"></script>
+</head>
+<body>
+  <header class="topo">
+    <div class="marca">
+      <img src="icone.svg" alt="" width="28" height="28">
+      <div>
+        <h1>Na Fonte</h1>
+        <p id="atualizado" class="discreto">Carregando…</p>
+      </div>
+    </div>
+    <button id="recarregar" class="botao-icone" type="button" aria-label="Recarregar notícias" title="Recarregar">↻</button>
+  </header>
+
+  <nav class="abas" aria-label="Seções">
+    <a href="#hoje" data-aba="hoje"><span aria-hidden="true">◉</span>Hoje</a>
+    <a href="#checagens" data-aba="checagens"><span aria-hidden="true">✓</span>Checagens</a>
+    <a href="#verificar" data-aba="verificar"><span aria-hidden="true">?</span>Verificar</a>
+    <a href="#fontes" data-aba="fontes"><span aria-hidden="true">≡</span>Fontes</a>
+  </nav>
+
+  <main>
+    <section id="aba-hoje" class="aba" hidden>
+      <h2>Assuntos em vários veículos</h2>
+      <p class="explicacao">Quando várias redações independentes noticiam a mesma coisa, é bem mais difícil ser boato.</p>
+      <div id="assuntos" class="lista"></div>
+
+      <h2>Últimas notícias</h2>
+      <div class="filtros" id="filtro-noticias" role="group" aria-label="Filtrar notícias">
+        <button type="button" data-filtro="todas" aria-pressed="true">Todas</button>
+        <button type="button" data-filtro="oficial" aria-pressed="false">Fontes oficiais</button>
+        <button type="button" data-filtro="veiculo" aria-pressed="false">Veículos</button>
+      </div>
+      <div id="noticias" class="lista"></div>
+    </section>
+
+    <section id="aba-checagens" class="aba" hidden>
+      <h2>Checagens recentes</h2>
+      <p class="explicacao">O que as agências de checagem confirmaram ou desmentiram. Boato que viraliza costuma ser checado em poucas horas.</p>
+      <div class="filtros" id="filtro-checagens" role="group" aria-label="Filtrar checagens">
+        <button type="button" data-filtro="todas" aria-pressed="true">Todas</button>
+        <button type="button" data-filtro="falso" aria-pressed="false">Falso</button>
+        <button type="button" data-filtro="enganoso" aria-pressed="false">Enganoso</button>
+        <button type="button" data-filtro="verdadeiro" aria-pressed="false">Verdadeiro</button>
+      </div>
+      <div id="checagens" class="lista"></div>
+    </section>
+
+    <section id="aba-verificar" class="aba" hidden>
+      <h2>Viu algo e ficou na dúvida?</h2>
+      <p class="explicacao">Cole o título, a legenda ou o que foi dito no vídeo. O app procura checagens e notícias sobre o assunto e aponta sinais comuns de boato.</p>
+      <form id="form-verificar" class="cartao">
+        <label for="texto">Texto do post, reel ou mensagem</label>
+        <textarea id="texto" name="texto" rows="5" maxlength="10000" required
+          placeholder="Ex.: 🚨 URGENTE!!! Voltaram atrás na 6x1! Compartilhe antes que apaguem"></textarea>
+        <label for="autor">Quem publicou?</label>
+        <select id="autor" name="autor">
+          <option value="">Não sei</option>
+          <option value="anonimo">Perfil anônimo ou página de "notícias"</option>
+          <option value="veiculo">Jornalista ou veículo conhecido</option>
+          <option value="oficial">Órgão oficial (governo, Senado, STF…)</option>
+        </select>
+        <button type="submit" class="botao">Analisar</button>
+      </form>
+      <div id="resultado" aria-live="polite"></div>
+    </section>
+
+    <section id="aba-fontes" class="aba" hidden>
+      <h2>Filtro rápido para reels</h2>
+      <ol class="cartao dicas">
+        <li><strong>Quem está falando?</strong> Jornalista, órgão oficial ou perfil de "notícias" anônimo?</li>
+        <li><strong>Cita fonte concreta?</strong> Número de lei, data, nome de quem disse.</li>
+        <li><strong>O título é alarmista?</strong> "ACABOU!", "VOLTARAM ATRÁS!": desconfie.</li>
+        <li><strong>Na dúvida,</strong> pesquise o assunto com a palavra "checagem" (ou use a aba Verificar).</li>
+      </ol>
+
+      <h2>De onde vêm as notícias</h2>
+      <p class="explicacao">O app só lê os feeds públicos destas fontes. Ele não decide o que é verdade: junta as fontes, mostra quem mais noticiou o mesmo assunto e aponta checagens relacionadas.</p>
+      <div id="lista-fontes"></div>
+
+      <h2>Como ler bem</h2>
+      <ul class="cartao dicas">
+        <li><strong>Leis e decisões do governo:</strong> vá direto na fonte (Agência Senado, Agência Câmara, Agência Brasil, gov.br).</li>
+        <li><strong>Dia a dia:</strong> compare dois veículos de linhas editoriais diferentes para ter o quadro completo.</li>
+        <li><strong>Troque o feed infinito</strong> por uma leitura curta: abra a aba Hoje uma ou duas vezes por dia.</li>
+      </ul>
+    </section>
+  </main>
+</body>
+</html>

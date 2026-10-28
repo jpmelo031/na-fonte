@@ -1,0 +1,13 @@
+{
+  "name": "Na Fonte",
+  "short_name": "Na Fonte",
+  "description": "Notícias de fontes confiáveis, checagens e um filtro rápido contra boatos.",
+  "lang": "pt-BR",
+  "start_url": "./#hoje",
+  "display": "standalone",
+  "background_color": "#f6f7f9",
+  "theme_color": "#0f766e",
+  "icons": [
+    { "src": "icone.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

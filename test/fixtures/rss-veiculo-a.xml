@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+<channel>
+  <title>Veículo A</title>
+  <link>https://veiculo-a.exemplo</link>
+  <item>
+    <title><![CDATA[Senado aprova PEC que acaba com a escala 6x1 em primeiro turno]]></title>
+    <link>https://veiculo-a.exemplo/politica/pec-6x1</link>
+    <description><![CDATA[<p>Texto segue agora para o <strong>segundo turno</strong> de votação.</p>]]></description>
+    <pubDate>Wed, 28 Oct 2026 12:00:00 -0300</pubDate>
+  </item>
+  <item>
+    <title>Inflação de outubro fica em 0,3%, diz IBGE</title>
+    <link>https://veiculo-a.exemplo/economia/ipca-outubro</link>
+    <description>&lt;p&gt;Índice veio abaixo do esperado pelo mercado &amp;amp; analistas.&lt;/p&gt;</description>
+    <pubDate>Wed, 28 Oct 2026 09:30:00 -0300</pubDate>
+  </item>
+  <item>
+    <title>URGENTE!!! BOMBA no Congresso</title>
+    <link>https://veiculo-a.exemplo/urgente</link>
+    <pubDate>Wed, 28 Oct 2026 08:00:00 -0300</pubDate>
+  </item>
+  <item>
+    <title>Item com link perigoso</title>
+    <link>javascript:alert(1)</link>
+  </item>
+</channel>
+</rss>
