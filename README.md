@@ -1,6 +1,6 @@
 # Na Fonte
 
-[![Testes](https://github.com/jpmelo031/priv-neutons/actions/workflows/testes.yml/badge.svg)](https://github.com/jpmelo031/priv-neutons/actions/workflows/testes.yml)
+[![Testes](https://github.com/jpmelo031/na-fonte/actions/workflows/testes.yml/badge.svg)](https://github.com/jpmelo031/na-fonte/actions/workflows/testes.yml)
 [![Licença: GPL-3.0](https://img.shields.io/badge/licen%C3%A7a-GPL--3.0-blue.svg)](LICENSE)
 
 Notícias de fontes confiáveis, checagens, o Brasil visto de fora e um filtro rápido contra boatos,
@@ -41,8 +41,8 @@ Precisa só do [Node.js](https://nodejs.org) 22 ou mais novo. O projeto não usa
 externa, então não precisa de `npm install`.
 
 ```bash
-git clone https://github.com/jpmelo031/priv-neutons.git
-cd priv-neutons
+git clone https://github.com/jpmelo031/na-fonte.git
+cd na-fonte
 npm start
 ```
 
@@ -60,8 +60,8 @@ Dá para rodar o app inteiro no próprio celular com o [Termux](https://termux.d
 ```bash
 pkg update && pkg upgrade        # responda "y" / Enter
 pkg install nodejs git
-git clone https://github.com/jpmelo031/priv-neutons.git
-cd priv-neutons
+git clone https://github.com/jpmelo031/na-fonte.git
+cd na-fonte
 termux-wake-lock                 # impede o Android de fechar o Termux em segundo plano
 npm start
 ```
