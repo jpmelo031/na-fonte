@@ -62,3 +62,14 @@ test('pareceNoticia descarta títulos que não são manchete', async () => {
   assert.equal(pareceNoticia({ titulo: 'Lula sanciona orçamento' }), true);
   assert.equal(pareceNoticia({ titulo: 'Áudio: Senado analisa criação do Dia Nacional de Celebração da África' }), true);
 });
+
+test('lê as categorias do feed (RSS, Atom e dc:subject)', () => {
+  const xml =
+    '<feed><entry><title>Um dois três</title><link href="https://a.exemplo/1"/>' +
+    '<category term="clima"/><category term="amazonia" label="Amazônia"/><category scheme="x">Meio Ambiente</category></entry>' +
+    '<item><title>Quatro cinco seis</title><link>https://a.exemplo/2</link>' +
+    '<category><![CDATA[Política]]></category><category domain="d">Eleições 2026</category><dc:subject>Lula</dc:subject></item></feed>';
+  const [atom, rss] = interpretarFeed(xml);
+  assert.deepEqual(atom.tags, ['clima', 'amazonia', 'Meio Ambiente']);
+  assert.deepEqual(rss.tags, ['Política', 'Eleições 2026', 'Lula']);
+});

@@ -10,9 +10,14 @@ agências de checagem, órgãos oficiais e veículos de imprensa com linhas edit
 | Aba | Para quê |
 | --- | --- |
 | **Hoje** | Mostra os **assuntos noticiados por várias fontes ao mesmo tempo** (quanto mais redações independentes, mais difícil ser boato), avisa quando uma fonte oficial também noticiou e quando existe checagem sobre o assunto. Embaixo, as últimas notícias, com filtro por fontes oficiais e veículos. |
+| **Lá fora** | O Brasil visto pela imprensa de outros países: DW e RFI (que escrevem em português), The Guardian, New York Times, BBC, El País, France 24 e Al Jazeera. Dos feeds gerais só entram as matérias que falam do Brasil, e as que estão em outra língua têm um link "Ler traduzido". |
 | **Checagens** | O que Aos Fatos, Lupa, Fato ou Fake, Estadão Verifica, Boatos.org e E-farsas confirmaram ou desmentiram, com o veredito (Falso / Enganoso / Verdadeiro) quando ele aparece no título. |
 | **Verificar** | Você cola o texto de um reel, post ou mensagem de WhatsApp. O app procura checagens e notícias sobre o assunto, aponta sinais típicos de boato (CAIXA ALTA, "URGENTE!!!", "compartilhe antes que apaguem", falta de fonte) e gera buscas prontas nas agências de checagem. |
 | **Fontes** | Lista de todas as fontes, com indicação de quais estão funcionando, e o filtro rápido para reels. |
+
+Nas abas Hoje e Lá fora dá para **filtrar por tema**: Política, Economia, Clima e ambiente,
+Ciência e tecnologia, Saúde, Educação, Segurança, Mundo, Esportes e Cultura. O tema escolhido fica
+guardado no aparelho.
 
 O app **não decide o que é verdade**. Ele junta as fontes, mostra quem mais está falando do mesmo
 assunto e aponta checagens. Todas as regras estão em [`src/analise.js`](src/analise.js), escritas
@@ -78,7 +83,8 @@ Se alguma falhar, abra o site dela, procure o link
 problema nunca derruba o app: ela só aparece em vermelho na aba Fontes e o app continua mostrando
 as notícias da última vez que ela funcionou.
 
-> Última conferência: 28/10/2026, com as 15 fontes funcionando. Projeto Comprova, Planalto,
+> Última conferência: 28/10/2026, com as 15 fontes brasileiras funcionando. As 8 fontes
+> internacionais ainda não foram testadas: rode `npm run checar-fontes -- internacional`. Projeto Comprova, Planalto,
 > Agência Gov, STF e TSE ficaram de fora porque não têm feed útil (detalhes no topo de
 > [`src/fontes.js`](src/fontes.js)). A busca da aba Verificar continua procurando no site do Comprova.
 
@@ -98,6 +104,12 @@ categoria (`checagem`, `oficial` ou `veiculo`). Para adicionar, copie um bloco e
   exclamação, emojis de alerta, pedido para compartilhar, "a mídia esconde") e de sinais de
   confiança (cita lei, data, instituição ou quem disse). Isso mede o jeito de escrever, não a verdade.
 - **"Título sensacionalista?":** aparece em manchetes que têm pelo menos dois sinais de forma.
+- **Temas:** cada notícia ganha até dois temas, somando pistas: a seção no endereço da matéria
+  (`g1.globo.com/politica/...`), as categorias que o próprio feed informa e palavras-chave no título
+  e no resumo (em português, inglês e espanhol). Senado e Câmara contam sempre como Política. Para
+  ajustar, edite as listas em [`src/temas.js`](src/temas.js).
+- **"Lá fora":** das fontes marcadas com `sobreBrasil` só entram matérias que citam o Brasil
+  (Brasil/Brazil/Brésil, Lula, Bolsonaro, Amazônia, Rio, São Paulo, Petrobras...).
 
 ## Testes
 
@@ -113,6 +125,7 @@ src/fontes.js        lista de fontes (edite aqui)
 src/feeds.js         baixa os feeds, com tolerância a falhas
 src/xml.js           lê RSS e Atom (inclusive feeds em ISO-8859-1)
 src/analise.js       agrupamento, checagens relacionadas e sinais de boato
+src/temas.js         temas do filtro e o filtro "fala do Brasil" (edite as palavras aqui)
 src/app.js           servidor HTTP e API (/api/noticias, /api/verificar)
 public/              a interface (HTML, CSS e JS puros)
 scripts/             checar-fontes

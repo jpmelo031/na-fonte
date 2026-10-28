@@ -2,22 +2,28 @@
 // Uso:
 //   npm run checar-fontes                      testa todas as fontes de src/fontes.js
 //   npm run checar-fontes -- senado            mostra todas as notícias de uma fonte (pelo id)
+//   npm run checar-fontes -- internacional     testa só uma categoria (ou vários ids/categorias)
 //   npm run checar-fontes -- https://... ...   testa endereços novos antes de colocar em src/fontes.js
 import { baixarTodas, DIAS_PARADO } from '../src/feeds.js';
 import { FONTES } from '../src/fontes.js';
 
 const argumentos = process.argv.slice(2);
 const urls = argumentos.filter((a) => /^https?:\/\//i.test(a));
-const idEscolhido = urls.length ? null : argumentos[0];
+const escolhas = urls.length ? [] : argumentos;
+const desconhecidos = escolhas.filter((e) => !FONTES.some((f) => f.id === e || f.categoria === e));
+
+if (desconhecidos.length) {
+  console.log(`Não reconheci: ${desconhecidos.join(', ')}`);
+  console.log(`Ids: ${FONTES.map((f) => f.id).join(', ')}`);
+  console.log(`Categorias: ${[...new Set(FONTES.map((f) => f.categoria))].join(', ')}`);
+  process.exit(1);
+}
 
 let fontes = FONTES;
 if (urls.length) fontes = urls.map((feed, i) => ({ id: `endereco${i + 1}`, nome: feed, categoria: 'teste', site: feed, feed }));
-else if (idEscolhido) fontes = FONTES.filter((f) => f.id === idEscolhido);
-
-if (fontes.length === 0) {
-  console.log(`Não existe fonte com id "${idEscolhido}". Ids disponíveis:\n  ${FONTES.map((f) => f.id).join(', ')}`);
-  process.exit(1);
-}
+else if (escolhas.length) fontes = FONTES.filter((f) => escolhas.includes(f.id) || escolhas.includes(f.categoria));
+// uma fonte só: lista tudo o que ela trouxe
+const idEscolhido = fontes.length === 1 && !urls.length ? fontes[0].id : null;
 
 function formatarData(iso) {
   if (!iso) return 'sem data';
@@ -39,7 +45,11 @@ for (const s of status) {
   const itens = porFonte[s.id].itens;
   const id = urls.length ? '' : `  [id: ${fonte.id}]`;
   console.log(`  OK    ${fonte.nome} (${s.quantidade} ${s.quantidade === 1 ? 'notícia' : 'notícias'})${id}`);
-  console.log(`        mais recente: ${itens[0].titulo} (${formatarData(itens[0].data)})`);
+  if (itens.length) {
+    console.log(`        mais recente: ${itens[0].titulo} (${formatarData(itens[0].data)})`);
+  } else {
+    console.log(`        o feed funciona, mas nada sobre o Brasil agora (última publicação: ${formatarData(s.ultimaNoticia)})`);
+  }
 
   if (!s.ultimaNoticia) {
     avisos++;

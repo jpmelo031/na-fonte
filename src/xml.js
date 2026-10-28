@@ -89,6 +89,17 @@ function extrairLink(bloco, base) {
   return guid && /^https?:\/\//i.test(guid) ? linkSeguro(guid, base) : null;
 }
 
+// Categorias que o próprio feed informa: <category>Política</category> (RSS),
+// <category term="politica"/> (Atom) ou <dc:subject>.
+function extrairTags(bloco) {
+  const tags = new Set();
+  for (const [, , atributos = '', conteudo] of bloco.matchAll(/<(category|dc:subject)(\s[^>]*?)?(?:\/>|>([\s\S]*?)<\/\1>)/gi)) {
+    const tag = textoPuro(conteudo) || atributo(atributos, 'term') || atributo(atributos, 'label');
+    if (tag) tags.add(tag);
+  }
+  return [...tags].slice(0, 10);
+}
+
 const MESES_PT = { jan: 'Jan', fev: 'Feb', mar: 'Mar', abr: 'Apr', mai: 'May', jun: 'Jun', jul: 'Jul', ago: 'Aug', set: 'Sep', out: 'Oct', nov: 'Nov', dez: 'Dec' };
 
 // Aceita RFC 822, ISO 8601 e o formato em português que alguns feeds brasileiros usam
@@ -115,7 +126,13 @@ export function interpretarFeed(xml, base) {
     if (!titulo || !link) continue;
     const resumo = textoPuro(conteudoDaTag(bloco, ['description', 'summary', 'content:encoded', 'content']));
     const data = interpretarData(textoPuro(conteudoDaTag(bloco, ['pubDate', 'published', 'updated', 'dc:date'])));
-    itens.push({ titulo, link, resumo: resumo.length > 320 ? resumo.slice(0, 317).trimEnd() + '…' : resumo, data });
+    itens.push({
+      titulo,
+      link,
+      resumo: resumo.length > 320 ? resumo.slice(0, 317).trimEnd() + '…' : resumo,
+      data,
+      tags: extrairTags(bloco),
+    });
   }
   return itens;
 }

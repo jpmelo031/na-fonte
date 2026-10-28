@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto';
 import { decodificarBytes, interpretarFeed } from './xml.js';
+import { classificarTemas, falaDoBrasil } from './temas.js';
 
 const USER_AGENT = 'Mozilla/5.0 (compatible; NaFonte/0.1; leitor de RSS)';
 const MAX_ITENS_POR_FONTE = 40;
@@ -38,16 +39,25 @@ export async function baixarFonte(fonte, { fetch = globalThis.fetch, timeoutMs =
   if (bytes.length > MAX_BYTES) throw new Error('feed grande demais');
 
   const xml = decodificarBytes(bytes, resposta.headers.get('content-type') ?? '');
-  const itens = interpretarFeed(xml, fonte.feed).filter(pareceNoticia).sort(maisRecentePrimeiro);
-  if (itens.length === 0) throw new Error('nenhuma notícia encontrada (o endereço do feed pode ter mudado)');
+  const doFeed = interpretarFeed(xml, fonte.feed).filter(pareceNoticia).sort(maisRecentePrimeiro);
+  if (doFeed.length === 0) throw new Error('nenhuma notícia encontrada (o endereço do feed pode ter mudado)');
 
-  return itens.slice(0, MAX_ITENS_POR_FONTE).map((item) => ({
-    id: idDoLink(item.link),
-    ...item,
-    fonteId: fonte.id,
-    fonteNome: fonte.nome,
-    categoria: fonte.categoria,
-  }));
+  // Num feed geral (ex.: "Américas" do NYT) pode não ter nada sobre o Brasil agora:
+  // isso não é erro, e a data da última publicação continua dizendo se o feed está vivo.
+  const itens = fonte.sobreBrasil ? doFeed.filter((item) => falaDoBrasil(`${item.titulo} ${item.resumo}`)) : doFeed;
+
+  return {
+    ultimaPublicacao: doFeed[0].data,
+    itens: itens.slice(0, MAX_ITENS_POR_FONTE).map(({ tags, ...item }) => ({
+      id: idDoLink(item.link),
+      ...item,
+      fonteId: fonte.id,
+      fonteNome: fonte.nome,
+      categoria: fonte.categoria,
+      idioma: fonte.idioma ?? 'pt',
+      temas: classificarTemas({ ...item, tags }, fonte),
+    })),
+  };
 }
 
 function mensagemDeErro(erro) {
@@ -67,9 +77,8 @@ export async function baixarTodas(fontes, { anteriores = {}, agora = Date.now(),
   const porFonte = {};
   const status = [];
 
-  // os itens de cada fonte já vêm do mais novo para o mais antigo
-  function situacao(itens = []) {
-    const ultimaNoticia = itens[0]?.data ?? null;
+  function situacao(registro) {
+    const ultimaNoticia = registro?.ultimaPublicacao ?? null;
     const parado = ultimaNoticia !== null && agora - Date.parse(ultimaNoticia) > DIAS_PARADO * 86400000;
     return { ultimaNoticia, parado };
   }
@@ -78,8 +87,8 @@ export async function baixarTodas(fontes, { anteriores = {}, agora = Date.now(),
     const fonte = fontes[i];
     const anterior = anteriores[fonte.id];
     if (resultado.status === 'fulfilled') {
-      porFonte[fonte.id] = { itens: resultado.value, sucessoEm };
-      status.push({ id: fonte.id, ok: true, quantidade: resultado.value.length, sucessoEm, ...situacao(resultado.value) });
+      porFonte[fonte.id] = { ...resultado.value, sucessoEm };
+      status.push({ id: fonte.id, ok: true, quantidade: resultado.value.itens.length, sucessoEm, ...situacao(resultado.value) });
     } else {
       if (anterior) porFonte[fonte.id] = anterior;
       status.push({
@@ -88,7 +97,7 @@ export async function baixarTodas(fontes, { anteriores = {}, agora = Date.now(),
         erro: mensagemDeErro(resultado.reason),
         quantidade: anterior?.itens.length ?? 0,
         sucessoEm: anterior?.sucessoEm ?? null,
-        ...situacao(anterior?.itens),
+        ...situacao(anterior),
       });
     }
   });

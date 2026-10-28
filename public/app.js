@@ -1,12 +1,24 @@
 // Interface do Na Fonte. Todo texto vindo dos feeds entra via textContent
 // (nunca innerHTML), para que um feed não consiga injetar HTML na página.
 
-const NOMES_CATEGORIA = { checagem: 'Checagem', oficial: 'Fonte oficial', veiculo: 'Veículo' };
+const NOMES_CATEGORIA = { checagem: 'Checagem', oficial: 'Fonte oficial', veiculo: 'Veículo', internacional: 'Imprensa internacional' };
 const NOMES_VEREDITO = { falso: 'Falso', enganoso: 'Enganoso', verdadeiro: 'Verdadeiro' };
-const ABAS = ['hoje', 'checagens', 'verificar', 'fontes'];
+const ABAS = ['hoje', 'lafora', 'checagens', 'verificar', 'fontes'];
 
 let dados = null;
-const filtros = { noticias: 'todas', checagens: 'todas' };
+const filtros = { noticias: 'todas', checagens: 'todas', temaHoje: 'todos', temaLafora: 'todos' };
+
+// O tema escolhido fica guardado neste aparelho (se o navegador deixar).
+for (const chave of ['temaHoje', 'temaLafora']) {
+  try {
+    filtros[chave] = localStorage.getItem(`na-fonte:${chave}`) || 'todos';
+  } catch {}
+}
+function lembrar(chave, valor) {
+  try {
+    localStorage.setItem(`na-fonte:${chave}`, valor);
+  } catch {}
+}
 
 function el(tag, atributos = {}, ...filhos) {
   const elemento = document.createElement(tag);
@@ -52,9 +64,39 @@ function vazio(texto) {
   return el('p', { class: 'vazio' }, texto);
 }
 
+function nomeDoTema(id) {
+  return dados.temas.find((t) => t.id === id)?.nome ?? id;
+}
+
+function temaCombina(item, tema) {
+  return tema === 'todos' || (item.temas ?? []).includes(tema);
+}
+
+function rotuloTemas(temas = []) {
+  return temas.map((tema) => el('span', { class: 'selo selo-tema' }, nomeDoTema(tema)));
+}
+
+function seloIdioma(item) {
+  return item.idioma && item.idioma !== 'pt' ? el('span', { class: 'selo selo-idioma' }, item.idioma.toUpperCase()) : null;
+}
+
+function linkTraduzir(item) {
+  if (!item.idioma || item.idioma === 'pt') return null;
+  const url = `https://translate.google.com/translate?sl=auto&tl=pt&u=${encodeURIComponent(item.link)}`;
+  return linkExterno(url, 'Ler traduzido para o português');
+}
+
+function textoVazio(tema, padrao) {
+  return tema === 'todos' ? padrao : `Nada de ${nomeDoTema(tema)} por aqui agora. Escolha outro tema ou "Todos".`;
+}
+
 // ---------------------------------------------------------------------------
 // Aba Hoje
 // ---------------------------------------------------------------------------
+
+function temasDoAssunto(assunto) {
+  return [...new Set(assunto.itens.flatMap((i) => i.temas ?? []))].slice(0, 2);
+}
 
 function cartaoAssunto(assunto) {
   const principal = assunto.itens.find((i) => i.titulo === assunto.titulo) ?? assunto.itens[0];
@@ -63,6 +105,7 @@ function cartaoAssunto(assunto) {
       el('span', { class: 'contagem' }, `${assunto.quantidadeFontes} fontes`),
       el('span', {}, '·'),
       el('span', {}, haQuanto(assunto.data)),
+      rotuloTemas(temasDoAssunto(assunto)),
       assunto.temFonteOficial && el('span', { class: 'selo selo-oficial' }, 'Inclui fonte oficial'),
       assunto.checagens.length > 0 && el('span', { class: 'selo selo-checagem' }, 'Tem checagem'),
     ),
@@ -84,28 +127,50 @@ function cartaoAssunto(assunto) {
 }
 
 function cartaoNoticia(item) {
+  const traduzir = linkTraduzir(item);
   return el('article', { class: 'cartao' },
     el('div', { class: 'meta' },
       seloCategoria(item.categoria, item.fonteNome),
+      seloIdioma(item),
       el('span', {}, haQuanto(item.data)),
+      rotuloTemas(item.temas),
       item.alarmista && el('span', { class: 'selo selo-alarmista', title: 'Título com cara de sensacionalismo. Leia a matéria antes de tirar conclusões.' }, 'Título sensacionalista?'),
     ),
     el('h3', {}, linkExterno(item.link, item.titulo)),
     item.resumo && el('p', { class: 'resumo' }, item.resumo),
+    traduzir && el('span', { class: 'traduzir' }, traduzir),
   );
 }
 
 function renderizarHoje() {
-  const assuntos = document.getElementById('assuntos');
-  assuntos.replaceChildren(
-    ...(dados.assuntos.length
-      ? dados.assuntos.map(cartaoAssunto)
-      : [vazio('Ainda não há assuntos noticiados por duas ou mais fontes nas últimas 48 horas.')]),
+  const tema = filtros.temaHoje;
+  const assuntos = dados.assuntos.filter((a) => a.itens.some((i) => temaCombina(i, tema)));
+  document.getElementById('assuntos').replaceChildren(
+    ...(assuntos.length
+      ? assuntos.map(cartaoAssunto)
+      : [vazio(textoVazio(tema, 'Ainda não há assuntos noticiados por duas ou mais fontes nas últimas 48 horas.'))]),
   );
 
-  const lista = dados.noticias.filter((n) => filtros.noticias === 'todas' || n.categoria === filtros.noticias).slice(0, 60);
+  const lista = dados.noticias
+    .filter((n) => filtros.noticias === 'todas' || n.categoria === filtros.noticias)
+    .filter((n) => temaCombina(n, tema))
+    .slice(0, 60);
   document.getElementById('noticias').replaceChildren(
-    ...(lista.length ? lista.map(cartaoNoticia) : [vazio('Nenhuma notícia por aqui ainda.')]),
+    ...(lista.length ? lista.map(cartaoNoticia) : [vazio(textoVazio(tema, 'Nenhuma notícia por aqui ainda.'))]),
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Aba Lá fora
+// ---------------------------------------------------------------------------
+
+function renderizarLafora() {
+  const tema = filtros.temaLafora;
+  const lista = dados.internacional.filter((n) => temaCombina(n, tema)).slice(0, 60);
+  document.getElementById('internacional').replaceChildren(
+    ...(lista.length
+      ? lista.map(cartaoNoticia)
+      : [vazio(textoVazio(tema, 'Nenhuma matéria da imprensa internacional sobre o Brasil nas fontes do app agora.'))]),
   );
 }
 
@@ -145,10 +210,11 @@ function estadoDaFonte(fonte) {
 }
 
 function renderizarFontes() {
-  const grupos = ['checagem', 'oficial', 'veiculo'].map((categoria) => {
+  const titulos = { checagem: 'Checagem', oficial: 'Fontes oficiais', veiculo: 'Veículos', internacional: 'Imprensa internacional' };
+  const grupos = Object.keys(titulos).map((categoria) => {
     const fontes = dados.fontes.filter((f) => f.categoria === categoria);
     return el('div', { class: 'cartao grupo-fontes' },
-      el('h3', {}, { checagem: 'Checagem', oficial: 'Fontes oficiais', veiculo: 'Veículos' }[categoria]),
+      el('h3', {}, titulos[categoria]),
       fontes.map((fonte) => {
         const [classe, texto] = estadoDaFonte(fonte);
         return el('div', { class: 'fonte' },
@@ -249,13 +315,28 @@ function ligarFiltro(idGrupo, chave, renderizar) {
     const botao = evento.target.closest('button[data-filtro]');
     if (!botao) return;
     filtros[chave] = botao.dataset.filtro;
+    if (chave.startsWith('tema')) lembrar(chave, filtros[chave]);
     for (const b of grupo.querySelectorAll('button')) b.setAttribute('aria-pressed', String(b === botao));
     if (dados) renderizar();
   });
 }
 
+// Os botões de tema vêm do servidor (src/temas.js), então são montados quando os dados chegam.
+function montarFiltroDeTemas(idGrupo, chave) {
+  const grupo = document.getElementById(idGrupo);
+  if (grupo.childElementCount) return;
+  if (!dados.temas.some((t) => t.id === filtros[chave])) filtros[chave] = 'todos';
+  const opcoes = [{ id: 'todos', nome: 'Todos os temas' }, ...dados.temas];
+  grupo.replaceChildren(...opcoes.map(({ id, nome }) =>
+    el('button', { type: 'button', 'data-filtro': id, 'aria-pressed': String(filtros[chave] === id) }, nome),
+  ));
+}
+
 function renderizarTudo() {
+  montarFiltroDeTemas('filtro-tema-hoje', 'temaHoje');
+  montarFiltroDeTemas('filtro-tema-lafora', 'temaLafora');
   renderizarHoje();
+  renderizarLafora();
   renderizarChecagens();
   renderizarFontes();
   const funcionando = dados.fontes.filter((f) => f.ok).length;
@@ -267,7 +348,7 @@ async function carregar() {
   const botao = document.getElementById('recarregar');
   botao.setAttribute('aria-busy', 'true');
   if (!dados) {
-    for (const id of ['assuntos', 'noticias', 'checagens']) {
+    for (const id of ['assuntos', 'noticias', 'internacional', 'checagens']) {
       document.getElementById(id).replaceChildren(vazio('Buscando notícias nas fontes… a primeira vez pode levar alguns segundos.'));
     }
   }
@@ -289,6 +370,8 @@ document.getElementById('recarregar').addEventListener('click', carregar);
 document.getElementById('form-verificar').addEventListener('submit', verificar);
 ligarFiltro('filtro-noticias', 'noticias', renderizarHoje);
 ligarFiltro('filtro-checagens', 'checagens', renderizarChecagens);
+ligarFiltro('filtro-tema-hoje', 'temaHoje', renderizarHoje);
+ligarFiltro('filtro-tema-lafora', 'temaLafora', renderizarLafora);
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible' && dados && Date.now() - Date.parse(dados.atualizadoEm) > 10 * 60000) carregar();
 });

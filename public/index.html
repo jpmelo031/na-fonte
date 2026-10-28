@@ -26,6 +26,7 @@
 
   <nav class="abas" aria-label="Seções">
     <a href="#hoje" data-aba="hoje"><span aria-hidden="true">◉</span>Hoje</a>
+    <a href="#lafora" data-aba="lafora"><span aria-hidden="true"><svg class="icone-globo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><ellipse cx="12" cy="12" rx="4" ry="9"/><path d="M3 12h18"/></svg></span>Lá fora</a>
     <a href="#checagens" data-aba="checagens"><span aria-hidden="true">✓</span>Checagens</a>
     <a href="#verificar" data-aba="verificar"><span aria-hidden="true">?</span>Verificar</a>
     <a href="#fontes" data-aba="fontes"><span aria-hidden="true">≡</span>Fontes</a>
@@ -33,6 +34,8 @@
 
   <main>
     <section id="aba-hoje" class="aba" hidden>
+      <div class="filtros filtro-temas" id="filtro-tema-hoje" role="group" aria-label="Filtrar por tema"></div>
+
       <h2>Assuntos em vários veículos</h2>
       <p class="explicacao">Quando várias redações independentes noticiam a mesma coisa, é bem mais difícil ser boato.</p>
       <div id="assuntos" class="lista"></div>
@@ -44,6 +47,13 @@
         <button type="button" data-filtro="veiculo" aria-pressed="false">Veículos</button>
       </div>
       <div id="noticias" class="lista"></div>
+    </section>
+
+    <section id="aba-lafora" class="aba" hidden>
+      <h2>O Brasil visto de fora</h2>
+      <p class="explicacao">O que a imprensa de outros países está publicando sobre o Brasil. Matérias em outra língua têm um link para ler traduzido.</p>
+      <div class="filtros filtro-temas" id="filtro-tema-lafora" role="group" aria-label="Filtrar por tema"></div>
+      <div id="internacional" class="lista"></div>
     </section>
 
     <section id="aba-checagens" class="aba" hidden>

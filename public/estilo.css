@@ -12,6 +12,8 @@
   --oficial-fundo: #e8f6ed;
   --veiculo: #1d4ed8;
   --veiculo-fundo: #e8eefc;
+  --internacional: #6d28d9;
+  --internacional-fundo: #f1eafd;
   --falso: #b91c1c;
   --falso-fundo: #fdeaea;
   --enganoso: #c2410c;
@@ -38,6 +40,8 @@
     --oficial-fundo: #12301d;
     --veiculo: #8fb0ff;
     --veiculo-fundo: #1a2647;
+    --internacional: #c4b0ff;
+    --internacional-fundo: #2a1f47;
     --falso: #ff8a8a;
     --falso-fundo: #3d1717;
     --enganoso: #ffa66b;
@@ -101,7 +105,7 @@ section > h2:first-child { margin-top: 8px; }
   bottom: 0; left: 0; right: 0;
   z-index: 2;
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   background: var(--superficie);
   border-top: 1px solid var(--borda);
   padding-bottom: env(safe-area-inset-bottom);
@@ -117,6 +121,7 @@ section > h2:first-child { margin-top: 8px; }
   color: var(--discreto);
 }
 .abas a span { font-size: 1.1rem; line-height: 1; }
+.icone-globo { width: 1.1rem; height: 1.1rem; display: block; }
 .abas a[aria-current="page"] { color: var(--destaque); font-weight: 600; }
 
 main {
@@ -140,6 +145,7 @@ main {
   .abas a { flex-direction: row; gap: 6px; padding: 12px 16px; font-size: 0.95rem; border-bottom: 2px solid transparent; }
   .abas a[aria-current="page"] { border-bottom-color: var(--destaque); }
   main { padding-bottom: 48px; }
+  .filtros { flex-wrap: wrap; overflow: visible; }
 }
 
 /* Cartões e listas */
@@ -178,6 +184,10 @@ main {
 .selo-checagem { color: var(--checagem); background: var(--checagem-fundo); }
 .selo-oficial { color: var(--oficial); background: var(--oficial-fundo); }
 .selo-veiculo { color: var(--veiculo); background: var(--veiculo-fundo); }
+.selo-internacional { color: var(--internacional); background: var(--internacional-fundo); }
+.selo-idioma { color: var(--discreto); border: 1px solid var(--borda); font-weight: 700; letter-spacing: 0.04em; }
+.selo-tema { color: var(--discreto); background: var(--fundo); font-weight: 500; }
+.traduzir { display: inline-block; margin-top: 6px; font-size: 0.85rem; color: var(--destaque); }
 .selo-falso { color: var(--falso); background: var(--falso-fundo); }
 .selo-enganoso, .selo-alarmista { color: var(--enganoso); background: var(--enganoso-fundo); }
 .selo-verdadeiro { color: var(--verdadeiro); background: var(--verdadeiro-fundo); }
@@ -194,7 +204,10 @@ main {
 .assunto .checagem-relacionada { margin-top: 8px; padding: 8px 10px; border-radius: 8px; background: var(--checagem-fundo); font-size: 0.88rem; }
 
 /* Filtros */
-.filtros { display: flex; gap: 8px; overflow-x: auto; margin: 0 -16px 12px; padding: 0 16px 2px; }
+.filtros { display: flex; gap: 8px; overflow-x: auto; margin: 0 -16px 12px; padding: 0 16px 2px; scrollbar-width: none; }
+.filtros::-webkit-scrollbar { display: none; }
+.filtro-temas { margin-bottom: 4px; }
+.filtro-temas:empty { display: none; }
 .filtros button {
   flex: none;
   padding: 6px 14px;

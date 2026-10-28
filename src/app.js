@@ -3,6 +3,7 @@ import { readFile } from 'node:fs/promises';
 import { extname, join, normalize, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { baixarTodas } from './feeds.js';
+import { TEMAS } from './temas.js';
 import {
   agruparAssuntos,
   analisarTexto,
@@ -40,8 +41,9 @@ export function criarApp({ fontes, intervaloMinutos = 15, fetch, timeoutMs, relo
       .filter((item) => item.categoria === 'checagem')
       .map((item) => ({ ...item, veredito: detectarVeredito(item.titulo) }));
     const noticias = itens
-      .filter((item) => item.categoria !== 'checagem')
+      .filter((item) => item.categoria === 'oficial' || item.categoria === 'veiculo')
       .map((item) => ({ ...item, alarmista: manchetePareceAlarmista(item.titulo) }));
+    const internacional = itens.filter((item) => item.categoria === 'internacional');
 
     const assuntos = agruparAssuntos(itens, { agora: relogio() }).map(({ palavras, ...assunto }) => ({
       ...assunto,
@@ -51,10 +53,12 @@ export function criarApp({ fontes, intervaloMinutos = 15, fetch, timeoutMs, relo
     const statusPorId = Object.fromEntries(ultimo.status.map((s) => [s.id, s]));
     return {
       atualizadoEm: ultimo.atualizadoEm,
-      fontes: fontes.map(({ id, nome, categoria, site }) => ({ id, nome, categoria, site, ...statusPorId[id] })),
+      fontes: fontes.map(({ id, nome, categoria, site, idioma = 'pt' }) => ({ id, nome, categoria, site, idioma, ...statusPorId[id] })),
+      temas: TEMAS.map(({ id, nome }) => ({ id, nome })),
       assuntos,
       checagens: checagens.slice(0, 80),
       noticias: noticias.slice(0, 150),
+      internacional: internacional.slice(0, 80),
     };
   }
 
@@ -122,7 +126,7 @@ export function criarApp({ fontes, intervaloMinutos = 15, fetch, timeoutMs, relo
         return enviarJson(res, 200, {
           analise: analisarTexto(texto, { autor }),
           checagens: buscarRelacionados(texto, resposta.checagens),
-          noticias: buscarRelacionados(texto, resposta.noticias),
+          noticias: buscarRelacionados(texto, [...resposta.noticias, ...resposta.internacional]),
           buscas: linksDeBusca(texto),
         });
       }

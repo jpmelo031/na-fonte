@@ -4,6 +4,12 @@
 //   "checagem" -> agências de checagem (dizem se algo é verdade ou boato)
 //   "oficial"  -> órgãos públicos (leis, votações, decisões do governo)
 //   "veiculo"  -> imprensa do dia a dia
+//   "internacional" -> imprensa de fora falando do Brasil (aba "Lá fora")
+//
+// Campos opcionais:
+//   idioma: 'en', 'es'...  matérias fora do português ganham o link "Ler traduzido"
+//   sobreBrasil: true      do feed só entram as matérias que falam do Brasil
+//   tema: 'politica'       tema que vale para tudo da fonte (ids em src/temas.js)
 //
 // Os endereços de feed mudam de vez em quando. Rode `npm run checar-fontes`
 // para ver quais estão funcionando e corrija aqui o que estiver quebrado.
@@ -67,6 +73,7 @@ export const FONTES = [
     categoria: 'oficial',
     site: 'https://www12.senado.leg.br/noticias',
     feed: 'https://www12.senado.leg.br/noticias/feed/todasnoticias/RSS',
+    tema: 'politica',
   },
   {
     id: 'camara',
@@ -74,6 +81,7 @@ export const FONTES = [
     categoria: 'oficial',
     site: 'https://www.camara.leg.br/noticias',
     feed: 'https://www.camara.leg.br/noticias/rss/ultimas-noticias',
+    tema: 'politica',
   },
   {
     id: 'agenciabrasil',
@@ -126,10 +134,82 @@ export const FONTES = [
     site: 'https://www.poder360.com.br',
     feed: 'https://www.poder360.com.br/feed/',
   },
+
+  // Imprensa internacional (aba "Lá fora")
+  {
+    id: 'dw',
+    nome: 'DW Brasil (Alemanha)',
+    categoria: 'internacional',
+    sobreBrasil: true,
+    site: 'https://www.dw.com/pt-br/',
+    feed: 'https://rss.dw.com/rdf/rss-br-all',
+  },
+  {
+    id: 'rfi',
+    nome: 'RFI Brasil (França)',
+    categoria: 'internacional',
+    sobreBrasil: true,
+    site: 'https://www.rfi.fr/br/',
+    feed: 'https://www.rfi.fr/br/rss',
+  },
+  {
+    id: 'guardian',
+    nome: 'The Guardian (Reino Unido)',
+    categoria: 'internacional',
+    idioma: 'en',
+    site: 'https://www.theguardian.com/world/brazil',
+    feed: 'https://www.theguardian.com/world/brazil/rss',
+  },
+  {
+    id: 'nyt',
+    nome: 'The New York Times (EUA)',
+    categoria: 'internacional',
+    idioma: 'en',
+    sobreBrasil: true,
+    site: 'https://www.nytimes.com/section/world/americas',
+    feed: 'https://rss.nytimes.com/services/xml/rss/nyt/Americas.xml',
+  },
+  {
+    id: 'bbcworld',
+    nome: 'BBC News (Reino Unido)',
+    categoria: 'internacional',
+    idioma: 'en',
+    sobreBrasil: true,
+    site: 'https://www.bbc.com/news/world/latin_america',
+    feed: 'https://feeds.bbci.co.uk/news/world/latin_america/rss.xml',
+  },
+  {
+    id: 'elpais',
+    nome: 'El País (Espanha)',
+    categoria: 'internacional',
+    idioma: 'es',
+    sobreBrasil: true,
+    site: 'https://elpais.com/america/',
+    feed: 'https://feeds.elpais.com/mrss-s/pages/ep/site/elpais.com/section/america/portada',
+  },
+  {
+    id: 'france24',
+    nome: 'France 24 (França)',
+    categoria: 'internacional',
+    idioma: 'en',
+    sobreBrasil: true,
+    site: 'https://www.france24.com/en/americas/',
+    feed: 'https://www.france24.com/en/americas/rss',
+  },
+  {
+    id: 'aljazeera',
+    nome: 'Al Jazeera (Catar)',
+    categoria: 'internacional',
+    idioma: 'en',
+    sobreBrasil: true,
+    site: 'https://www.aljazeera.com/where/brazil/',
+    feed: 'https://www.aljazeera.com/xml/rss/all.xml',
+  },
 ];
 
 export const CATEGORIAS = {
   checagem: 'Checagem',
   oficial: 'Fonte oficial',
   veiculo: 'Veículo',
+  internacional: 'Imprensa internacional',
 };

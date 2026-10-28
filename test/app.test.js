@@ -20,6 +20,18 @@ before(async () => {
       '/oficial.atom': ['application/atom+xml', fixture('atom-oficial.xml')],
       '/checagem.xml': ['application/rss+xml', fixture('rss-checagem.xml')],
       '/pagina.html': ['text/html', Buffer.from('<html><body>Não é um feed</body></html>')],
+      '/intl.xml': ['application/rss+xml', Buffer.from(
+        '<rss><channel>' +
+        "<item><title>Brazil's Lula vows to end deforestation in the Amazon rainforest</title>" +
+        '<link>https://intl.exemplo/brazil-amazon</link><pubDate>Wed, 28 Oct 2026 16:00:00 GMT</pubDate></item>' +
+        '<item><title>Mexico elects its first new president in decades</title>' +
+        '<link>https://intl.exemplo/mexico</link><pubDate>Wed, 28 Oct 2026 17:00:00 GMT</pubDate></item>' +
+        '</channel></rss>',
+      )],
+      '/intl-sem-brasil.xml': ['application/rss+xml', Buffer.from(
+        '<rss><channel><item><title>Chile approves new pension reform plan</title>' +
+        '<link>https://intl.exemplo/chile</link><pubDate>Wed, 28 Oct 2026 17:30:00 GMT</pubDate></item></channel></rss>',
+      )],
       '/velho.xml': ['application/rss+xml', Buffer.from(
         '<rss><channel><item><title>Notícia esquecida de um feed abandonado</title>' +
         '<link>https://velho.exemplo/1</link><pubDate>Tue, 09 Jul 2019 04:17:00 GMT</pubDate></item></channel></rss>',
@@ -36,11 +48,13 @@ before(async () => {
   const fontes = [
     { id: 'a', nome: 'Veículo A', categoria: 'veiculo', site: 'https://veiculo-a.exemplo', feed: `${feeds}/a.xml` },
     { id: 'b', nome: 'Veículo B', categoria: 'veiculo', site: 'https://veiculo-b.exemplo', feed: `${feeds}/b.xml` },
-    { id: 'oficial', nome: 'Órgão Oficial', categoria: 'oficial', site: 'https://oficial.exemplo', feed: `${feeds}/oficial.atom` },
+    { id: 'oficial', nome: 'Órgão Oficial', categoria: 'oficial', site: 'https://oficial.exemplo', feed: `${feeds}/oficial.atom`, tema: 'politica' },
     { id: 'checador', nome: 'Checador X', categoria: 'checagem', site: 'https://checador.exemplo', feed: `${feeds}/checagem.xml` },
     { id: 'quebrado', nome: 'Fonte Quebrada', categoria: 'veiculo', site: 'https://quebrado.exemplo', feed: `${feeds}/nao-existe.xml` },
     { id: 'html', nome: 'Página Comum', categoria: 'veiculo', site: 'https://html.exemplo', feed: `${feeds}/pagina.html` },
     { id: 'velho', nome: 'Feed Abandonado', categoria: 'veiculo', site: 'https://velho.exemplo', feed: `${feeds}/velho.xml` },
+    { id: 'intl', nome: 'Jornal Estrangeiro', categoria: 'internacional', idioma: 'en', sobreBrasil: true, site: 'https://intl.exemplo', feed: `${feeds}/intl.xml` },
+    { id: 'intlsembrasil', nome: 'Outro Estrangeiro', categoria: 'internacional', idioma: 'en', sobreBrasil: true, site: 'https://intl.exemplo', feed: `${feeds}/intl-sem-brasil.xml` },
   ];
   // As notícias das fixtures são de 28/10/2026: o relógio fica fixo nesse dia.
   app = criarApp({ fontes, timeoutMs: 5000, relogio: () => Date.parse('2026-10-28T18:00:00Z') });
@@ -80,6 +94,34 @@ test('GET /api/noticias junta as fontes e mostra quais falharam', async () => {
   assert.equal(dados.checagens.find((c) => c.titulo.startsWith('É falso')).veredito, 'falso');
   assert.ok(dados.noticias.every((n) => n.categoria !== 'checagem'));
   assert.equal(dados.noticias.find((n) => n.titulo.startsWith('URGENTE')).alarmista, true);
+});
+
+test('imprensa internacional: só o que fala do Brasil, com idioma e tema', async () => {
+  const dados = await (await fetch(`${base}/api/noticias`)).json();
+  assert.deepEqual(dados.internacional.map((n) => n.link), ['https://intl.exemplo/brazil-amazon']);
+  assert.equal(dados.internacional[0].idioma, 'en');
+  assert.ok(dados.internacional[0].temas.includes('clima'));
+  assert.ok(dados.noticias.every((n) => n.categoria !== 'internacional'));
+
+  // feed que funciona mas não tem nada do Brasil agora não é erro nem fonte parada
+  const semBrasil = dados.fontes.find((f) => f.id === 'intlsembrasil');
+  assert.equal(semBrasil.ok, true);
+  assert.equal(semBrasil.quantidade, 0);
+  assert.equal(semBrasil.ultimaNoticia, '2026-10-28T17:30:00.000Z');
+  assert.equal(semBrasil.parado, false);
+  assert.equal(semBrasil.idioma, 'en');
+});
+
+test('cada notícia vem com seus temas e a lista de temas vai junto', async () => {
+  const dados = await (await fetch(`${base}/api/noticias`)).json();
+  assert.ok(dados.temas.some((t) => t.id === 'politica' && t.nome === 'Política'));
+  assert.ok(dados.noticias.every((n) => Array.isArray(n.temas)));
+  // fonte com tema fixo (como Senado e Câmara) + "orçamento" no título
+  const orcamento = dados.noticias.find((n) => n.titulo.includes('orçamento'));
+  assert.deepEqual([...orcamento.temas].sort(), ['economia', 'politica']);
+  const inflacao = dados.noticias.find((n) => n.titulo.startsWith('Inflação'));
+  assert.deepEqual(inflacao.temas, ['economia']);
+  assert.ok(!('tags' in inflacao), 'as categorias do feed não precisam ir para a tela');
 });
 
 test('assuntos em vários veículos aparecem com a checagem relacionada', async () => {
