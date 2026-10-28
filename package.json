@@ -1,7 +1,12 @@
 {
   "name": "na-fonte",
   "version": "0.1.0",
-  "description": "Notícias de fontes confiáveis, checagens e um filtro rápido contra boatos, num lugar só.",
+  "description": "Notícias de fontes confiáveis, checagens, o Brasil visto de fora e um filtro rápido contra boatos, num lugar só.",
+  "license": "GPL-3.0-or-later",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jpmelo031/priv-neutons.git"
+  },
   "private": true,
   "type": "module",
   "scripts": {
@@ -10,6 +15,6 @@
     "checar-fontes": "node scripts/checar-fontes.js"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=22"
   }
 }

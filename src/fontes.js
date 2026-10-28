@@ -206,10 +206,3 @@ export const FONTES = [
     feed: 'https://www.aljazeera.com/xml/rss/all.xml',
   },
 ];
-
-export const CATEGORIAS = {
-  checagem: 'Checagem',
-  oficial: 'Fonte oficial',
-  veiculo: 'Veículo',
-  internacional: 'Imprensa internacional',
-};
