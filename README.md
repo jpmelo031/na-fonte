@@ -10,7 +10,7 @@ agências de checagem, órgãos oficiais e veículos de imprensa com linhas edit
 | Aba | Para quê |
 | --- | --- |
 | **Hoje** | Mostra os **assuntos noticiados por várias fontes ao mesmo tempo** (quanto mais redações independentes, mais difícil ser boato), avisa quando uma fonte oficial também noticiou e quando existe checagem sobre o assunto. Embaixo, as últimas notícias, com filtro por fontes oficiais e veículos. |
-| **Checagens** | O que Comprova, Aos Fatos, Lupa, Fato ou Fake, Estadão Verifica e outros confirmaram ou desmentiram, com o veredito (Falso / Enganoso / Verdadeiro) quando ele aparece no título. |
+| **Checagens** | O que Aos Fatos, Lupa, Fato ou Fake, Estadão Verifica, Boatos.org e E-farsas confirmaram ou desmentiram, com o veredito (Falso / Enganoso / Verdadeiro) quando ele aparece no título. |
 | **Verificar** | Você cola o texto de um reel, post ou mensagem de WhatsApp. O app procura checagens e notícias sobre o assunto, aponta sinais típicos de boato (CAIXA ALTA, "URGENTE!!!", "compartilhe antes que apaguem", falta de fonte) e gera buscas prontas nas agências de checagem. |
 | **Fontes** | Lista de todas as fontes, com indicação de quais estão funcionando, e o filtro rápido para reels. |
 
@@ -71,16 +71,16 @@ npm run checar-fontes
 ```
 
 Ele mostra `OK` ou `ERRO` para cada fonte, com a data da notícia mais nova, e avisa quando um feed
-parece parado. Para ver tudo o que uma fonte trouxe, use o id dela: `npm run checar-fontes -- planalto`.
+parece parado. Para ver tudo o que uma fonte trouxe, use o id dela: `npm run checar-fontes -- senado`.
 Para testar um endereço novo antes de colocar no app: `npm run checar-fontes -- https://site.com/feed/`.
 Se alguma falhar, abra o site dela, procure o link
 "RSS" (geralmente no rodapé) e troque o endereço em [`src/fontes.js`](src/fontes.js). Uma fonte com
 problema nunca derruba o app: ela só aparece em vermelho na aba Fontes e o app continua mostrando
 as notícias da última vez que ela funcionou.
 
-> Os endereços dos feeds foram montados a partir dos padrões que cada site usa, mas não puderam ser
-> testados no ambiente onde o app foi criado (sem acesso a esses sites). Rode o comando acima na
-> primeira vez.
+> Última conferência: 28/10/2026, com as 15 fontes funcionando. Projeto Comprova, Planalto,
+> Agência Gov, STF e TSE ficaram de fora porque não têm feed útil (detalhes no topo de
+> [`src/fontes.js`](src/fontes.js)). A busca da aba Verificar continua procurando no site do Comprova.
 
 ## Adicionar ou tirar fontes
 

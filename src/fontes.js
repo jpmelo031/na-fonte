@@ -7,16 +7,16 @@
 //
 // Os endereços de feed mudam de vez em quando. Rode `npm run checar-fontes`
 // para ver quais estão funcionando e corrija aqui o que estiver quebrado.
+// Para testar um endereço novo antes: npm run checar-fontes -- https://...
+//
+// Ficaram de fora por não terem feed útil (testado em 28/10/2026):
+//   Projeto Comprova: /feed/ só tem um item de 2019; /index.xml dá 404.
+//     As checagens dele saem nos veículos parceiros, e a aba Verificar busca no site.
+//   Planalto (gov.br): o feed só traz a agenda de visitas e para por semanas.
+//   Agência Gov, STF e TSE: sem feed ou com feed desatualizado.
 
 export const FONTES = [
   // Checagem
-  {
-    id: 'comprova',
-    nome: 'Projeto Comprova',
-    categoria: 'checagem',
-    site: 'https://projetocomprova.com.br',
-    feed: 'https://projetocomprova.com.br/feed/',
-  },
   {
     id: 'aosfatos',
     nome: 'Aos Fatos',
@@ -81,13 +81,6 @@ export const FONTES = [
     categoria: 'oficial',
     site: 'https://agenciabrasil.ebc.com.br',
     feed: 'https://agenciabrasil.ebc.com.br/rss/ultimasnoticias/feed.xml',
-  },
-  {
-    id: 'planalto',
-    nome: 'Planalto (gov.br)',
-    categoria: 'oficial',
-    site: 'https://www.gov.br/planalto/pt-br',
-    feed: 'https://www.gov.br/planalto/pt-br/acompanhe-o-planalto/noticias/RSS',
   },
 
   // Veículos
