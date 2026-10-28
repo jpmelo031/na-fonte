@@ -61,7 +61,7 @@ export function criarApp({ fontes, intervaloMinutos = 15, fetch, timeoutMs, relo
   async function atualizar() {
     if (emAndamento) return emAndamento;
     emAndamento = (async () => {
-      const resultado = await baixarTodas(fontes, { anteriores: ultimo.porFonte, fetch, timeoutMs });
+      const resultado = await baixarTodas(fontes, { anteriores: ultimo.porFonte, agora: relogio(), fetch, timeoutMs });
       ultimo = { ...resultado, atualizadoEm: new Date().toISOString() };
       resposta = montarResposta();
       const ok = resultado.status.filter((s) => s.ok).length;

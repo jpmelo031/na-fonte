@@ -20,6 +20,10 @@ before(async () => {
       '/oficial.atom': ['application/atom+xml', fixture('atom-oficial.xml')],
       '/checagem.xml': ['application/rss+xml', fixture('rss-checagem.xml')],
       '/pagina.html': ['text/html', Buffer.from('<html><body>Não é um feed</body></html>')],
+      '/velho.xml': ['application/rss+xml', Buffer.from(
+        '<rss><channel><item><title>Notícia esquecida de um feed abandonado</title>' +
+        '<link>https://velho.exemplo/1</link><pubDate>Tue, 09 Jul 2019 04:17:00 GMT</pubDate></item></channel></rss>',
+      )],
     };
     if (req.url === '/a.xml' && feedAForaDoAr) return res.writeHead(503).end();
     const rota = rotas[req.url];
@@ -36,6 +40,7 @@ before(async () => {
     { id: 'checador', nome: 'Checador X', categoria: 'checagem', site: 'https://checador.exemplo', feed: `${feeds}/checagem.xml` },
     { id: 'quebrado', nome: 'Fonte Quebrada', categoria: 'veiculo', site: 'https://quebrado.exemplo', feed: `${feeds}/nao-existe.xml` },
     { id: 'html', nome: 'Página Comum', categoria: 'veiculo', site: 'https://html.exemplo', feed: `${feeds}/pagina.html` },
+    { id: 'velho', nome: 'Feed Abandonado', categoria: 'veiculo', site: 'https://velho.exemplo', feed: `${feeds}/velho.xml` },
   ];
   // As notícias das fixtures são de 28/10/2026: o relógio fica fixo nesse dia.
   app = criarApp({ fontes, timeoutMs: 5000, relogio: () => Date.parse('2026-10-28T18:00:00Z') });
@@ -62,6 +67,11 @@ test('GET /api/noticias junta as fontes e mostra quais falharam', async () => {
   assert.match(status.quebrado.erro, /HTTP 500/);
   assert.equal(status.html.ok, false);
   assert.match(status.html.erro, /nenhuma notícia/);
+
+  assert.equal(status.a.ultimaNoticia, '2026-10-28T15:00:00.000Z');
+  assert.equal(status.a.parado, false);
+  assert.equal(status.velho.ok, true);
+  assert.equal(status.velho.parado, true);
 
   // "Test Document" (checagem) e a pasta "2023" (oficial) não são notícias
   assert.equal(dados.checagens.length, 3);

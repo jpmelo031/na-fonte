@@ -4,6 +4,8 @@ import { decodificarBytes, interpretarFeed } from './xml.js';
 const USER_AGENT = 'Mozilla/5.0 (compatible; NaFonte/0.1; leitor de RSS)';
 const MAX_ITENS_POR_FONTE = 40;
 const MAX_BYTES = 5 * 1024 * 1024;
+// Fonte cuja notícia mais nova é mais antiga que isso aparece como "parada".
+export const DIAS_PARADO = 7;
 
 function idDoLink(link) {
   return createHash('sha1').update(link).digest('hex').slice(0, 12);
@@ -59,18 +61,25 @@ function mensagemDeErro(erro) {
 // Baixa todas as fontes em paralelo. Uma fonte com problema nunca derruba as outras:
 // ela aparece com erro em `status` e, se já tinha funcionado antes, mantém as
 // notícias da última vez que deu certo (passadas em `anteriores`).
-export async function baixarTodas(fontes, { anteriores = {}, ...opcoes } = {}) {
+export async function baixarTodas(fontes, { anteriores = {}, agora = Date.now(), ...opcoes } = {}) {
   const resultados = await Promise.allSettled(fontes.map((fonte) => baixarFonte(fonte, opcoes)));
-  const agora = new Date().toISOString();
+  const sucessoEm = new Date(agora).toISOString();
   const porFonte = {};
   const status = [];
+
+  // os itens de cada fonte já vêm do mais novo para o mais antigo
+  function situacao(itens = []) {
+    const ultimaNoticia = itens[0]?.data ?? null;
+    const parado = ultimaNoticia !== null && agora - Date.parse(ultimaNoticia) > DIAS_PARADO * 86400000;
+    return { ultimaNoticia, parado };
+  }
 
   resultados.forEach((resultado, i) => {
     const fonte = fontes[i];
     const anterior = anteriores[fonte.id];
     if (resultado.status === 'fulfilled') {
-      porFonte[fonte.id] = { itens: resultado.value, sucessoEm: agora };
-      status.push({ id: fonte.id, ok: true, quantidade: resultado.value.length, sucessoEm: agora });
+      porFonte[fonte.id] = { itens: resultado.value, sucessoEm };
+      status.push({ id: fonte.id, ok: true, quantidade: resultado.value.length, sucessoEm, ...situacao(resultado.value) });
     } else {
       if (anterior) porFonte[fonte.id] = anterior;
       status.push({
@@ -79,6 +88,7 @@ export async function baixarTodas(fontes, { anteriores = {}, ...opcoes } = {}) {
         erro: mensagemDeErro(resultado.reason),
         quantidade: anterior?.itens.length ?? 0,
         sucessoEm: anterior?.sucessoEm ?? null,
+        ...situacao(anterior?.itens),
       });
     }
   });

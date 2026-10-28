@@ -34,7 +34,10 @@ function haQuanto(iso) {
   if (minutos > -60) return relativo.format(minutos, 'minute');
   const horas = Math.round(minutos / 60);
   if (horas > -24) return relativo.format(horas, 'hour');
-  return new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
+  const data = new Date(iso);
+  const formato = { day: '2-digit', month: 'short' };
+  if (data.getFullYear() !== new Date().getFullYear()) formato.year = 'numeric';
+  return data.toLocaleDateString('pt-BR', formato);
 }
 
 function seloCategoria(categoria, nome) {
@@ -133,23 +136,26 @@ function renderizarChecagens() {
 // Aba Fontes
 // ---------------------------------------------------------------------------
 
+function estadoDaFonte(fonte) {
+  if (!fonte.ok) {
+    return ['erro', fonte.sucessoEm ? `com problema, mostrando de ${haQuanto(fonte.sucessoEm)}` : `fora do ar: ${fonte.erro ?? 'sem resposta'}`];
+  }
+  if (fonte.parado) return ['aviso', `parada: última notícia ${haQuanto(fonte.ultimaNoticia)}`];
+  return ['ok', fonte.ultimaNoticia ? `última notícia ${haQuanto(fonte.ultimaNoticia)}` : `${fonte.quantidade} notícias`];
+}
+
 function renderizarFontes() {
   const grupos = ['checagem', 'oficial', 'veiculo'].map((categoria) => {
     const fontes = dados.fontes.filter((f) => f.categoria === categoria);
     return el('div', { class: 'cartao grupo-fontes' },
       el('h3', {}, { checagem: 'Checagem', oficial: 'Fontes oficiais', veiculo: 'Veículos' }[categoria]),
-      fontes.map((fonte) =>
-        el('div', { class: 'fonte' },
+      fontes.map((fonte) => {
+        const [classe, texto] = estadoDaFonte(fonte);
+        return el('div', { class: 'fonte' },
           linkExterno(fonte.site, fonte.nome),
-          el('span', { class: `estado ${fonte.ok ? 'ok' : 'erro'}`, title: fonte.erro ?? '' },
-            fonte.ok
-              ? `${fonte.quantidade} notícias`
-              : fonte.sucessoEm
-                ? `com problema, mostrando de ${haQuanto(fonte.sucessoEm)}`
-                : `fora do ar: ${fonte.erro ?? 'sem resposta'}`,
-          ),
-        ),
-      ),
+          el('span', { class: `estado ${classe}`, title: fonte.erro ?? '' }, texto),
+        );
+      }),
     );
   });
   document.getElementById('lista-fontes').replaceChildren(...grupos);

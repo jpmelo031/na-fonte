@@ -265,3 +265,4 @@ ul.dicas { padding-left: 32px; }
 .fonte .estado { font-size: 0.8rem; text-align: right; color: var(--discreto); }
 .fonte .estado.ok::before { content: "● "; color: var(--oficial); }
 .fonte .estado.erro::before { content: "● "; color: var(--falso); }
+.fonte .estado.aviso::before { content: "● "; color: var(--enganoso); }

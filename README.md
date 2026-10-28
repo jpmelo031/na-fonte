@@ -72,6 +72,7 @@ npm run checar-fontes
 
 Ele mostra `OK` ou `ERRO` para cada fonte, com a data da notícia mais nova, e avisa quando um feed
 parece parado. Para ver tudo o que uma fonte trouxe, use o id dela: `npm run checar-fontes -- planalto`.
+Para testar um endereço novo antes de colocar no app: `npm run checar-fontes -- https://site.com/feed/`.
 Se alguma falhar, abra o site dela, procure o link
 "RSS" (geralmente no rodapé) e troque o endereço em [`src/fontes.js`](src/fontes.js). Uma fonte com
 problema nunca derruba o app: ela só aparece em vermelho na aba Fontes e o app continua mostrando
