@@ -9,6 +9,18 @@ function idDoLink(link) {
   return createHash('sha1').update(link).digest('hex').slice(0, 12);
 }
 
+// Alguns feeds misturam coisas que não são notícia: o do gov.br lista as pastas
+// do site ("2023", "2024") e o do Comprova tinha um "Test Document". Manchete de
+// verdade quase sempre tem pelo menos 3 palavras.
+export function pareceNoticia(item) {
+  const palavras = item.titulo.split(/\s+/).filter((p) => /\p{L}/u.test(p));
+  return palavras.length >= 3;
+}
+
+function maisRecentePrimeiro(a, b) {
+  return (b.data ?? '').localeCompare(a.data ?? '');
+}
+
 export async function baixarFonte(fonte, { fetch = globalThis.fetch, timeoutMs = 15000 } = {}) {
   const resposta = await fetch(fonte.feed, {
     headers: {
@@ -24,7 +36,7 @@ export async function baixarFonte(fonte, { fetch = globalThis.fetch, timeoutMs =
   if (bytes.length > MAX_BYTES) throw new Error('feed grande demais');
 
   const xml = decodificarBytes(bytes, resposta.headers.get('content-type') ?? '');
-  const itens = interpretarFeed(xml, fonte.feed);
+  const itens = interpretarFeed(xml, fonte.feed).filter(pareceNoticia).sort(maisRecentePrimeiro);
   if (itens.length === 0) throw new Error('nenhuma notícia encontrada (o endereço do feed pode ter mudado)');
 
   return itens.slice(0, MAX_ITENS_POR_FONTE).map((item) => ({

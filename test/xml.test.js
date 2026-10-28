@@ -21,11 +21,13 @@ test('descarta itens com link que não é http(s)', () => {
 });
 
 test('lê Atom, entidades e links relativos', () => {
-  const itens = interpretarFeed(fixture('atom-oficial.xml').toString('utf8'), 'https://oficial.exemplo/feed.atom');
-  assert.equal(itens[0].titulo, 'PEC da escala 6x1 é aprovada no Senado e vai ao segundo turno');
-  assert.equal(itens[0].link, 'https://oficial.exemplo/noticias/pec-6x1-aprovada');
-  assert.equal(itens[0].resumo, 'Proposta reduz a jornada máxima de trabalho.');
-  assert.equal(itens[1].link, 'https://oficial.exemplo/noticias/orcamento-2027');
+  // o parser não filtra nada; a pasta "2023" é descartada depois, em feeds.js
+  const [pasta, pec, orcamento] = interpretarFeed(fixture('atom-oficial.xml').toString('utf8'), 'https://oficial.exemplo/feed.atom');
+  assert.equal(pasta.titulo, '2023');
+  assert.equal(pec.titulo, 'PEC da escala 6x1 é aprovada no Senado e vai ao segundo turno');
+  assert.equal(pec.link, 'https://oficial.exemplo/noticias/pec-6x1-aprovada');
+  assert.equal(pec.resumo, 'Proposta reduz a jornada máxima de trabalho.');
+  assert.equal(orcamento.link, 'https://oficial.exemplo/noticias/orcamento-2027');
 });
 
 test('decodifica ISO-8859-1 e datas em português', () => {
@@ -51,4 +53,12 @@ test('interpretarData lida com formatos variados', () => {
 test('textoPuro remove scripts e normaliza espaços', () => {
   assert.equal(textoPuro('<p>Oi<script>alert(1)</script>  <b>mundo</b></p>'), 'Oi mundo');
   assert.equal(textoPuro('&#x1F6A8; &quot;aspas&quot;'), '🚨 "aspas"');
+});
+
+test('pareceNoticia descarta títulos que não são manchete', async () => {
+  const { pareceNoticia } = await import('../src/feeds.js');
+  assert.equal(pareceNoticia({ titulo: '2023' }), false);
+  assert.equal(pareceNoticia({ titulo: 'Test Document' }), false);
+  assert.equal(pareceNoticia({ titulo: 'Lula sanciona orçamento' }), true);
+  assert.equal(pareceNoticia({ titulo: 'Áudio: Senado analisa criação do Dia Nacional de Celebração da África' }), true);
 });

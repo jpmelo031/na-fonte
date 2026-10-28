@@ -3,6 +3,11 @@
 <channel>
   <title>Checador X</title>
   <item>
+    <title>Test Document</title>
+    <link>https://checador.exemplo/test-document</link>
+    <pubDate>Wed, 28 Oct 2026 17:00:00 GMT</pubDate>
+  </item>
+  <item>
     <title>É falso que governo voltou atrás na PEC da escala 6x1</title>
     <link>https://checador.exemplo/falso-voltou-atras-6x1</link>
     <description>Vídeo que circula nas redes diz que a proposta foi cancelada; tramitação segue normalmente no Senado.</description>

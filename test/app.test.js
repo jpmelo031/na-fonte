@@ -63,7 +63,10 @@ test('GET /api/noticias junta as fontes e mostra quais falharam', async () => {
   assert.equal(status.html.ok, false);
   assert.match(status.html.erro, /nenhuma notícia/);
 
+  // "Test Document" (checagem) e a pasta "2023" (oficial) não são notícias
   assert.equal(dados.checagens.length, 3);
+  assert.ok(!dados.checagens.some((c) => c.titulo === 'Test Document'));
+  assert.ok(!dados.noticias.some((n) => n.titulo === '2023'));
   assert.equal(dados.checagens.find((c) => c.titulo.startsWith('É falso')).veredito, 'falso');
   assert.ok(dados.noticias.every((n) => n.categoria !== 'checagem'));
   assert.equal(dados.noticias.find((n) => n.titulo.startsWith('URGENTE')).alarmista, true);

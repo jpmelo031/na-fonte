@@ -2,6 +2,11 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>Órgão Oficial</title>
   <entry>
+    <title>2023</title>
+    <link href="https://oficial.exemplo/noticias/2023"/>
+    <updated>2026-10-28T17:30:00Z</updated>
+  </entry>
+  <entry>
     <title type="html">PEC da escala 6x1 &#233; aprovada no Senado e vai ao segundo turno</title>
     <link rel="alternate" href="https://oficial.exemplo/noticias/pec-6x1-aprovada"/>
     <link rel="enclosure" href="https://oficial.exemplo/foto.jpg"/>
