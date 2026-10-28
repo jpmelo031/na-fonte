@@ -35,6 +35,33 @@ use "Adicionar à tela inicial" para ele virar um ícone como um app.
 
 As fontes são atualizadas sozinhas a cada 15 minutos (mude com `INTERVALO_MINUTOS=30 npm start`).
 
+### Rodar direto no celular Android (Termux)
+
+Dá para rodar o app inteiro no próprio celular com o [Termux](https://termux.dev).
+
+```bash
+# 1. Atualizar o Termux e instalar Node, git e o GitHub CLI (responda "y" / Enter)
+pkg update && pkg upgrade
+pkg install nodejs git gh
+
+# 2. Entrar no GitHub (o repositório é privado)
+gh auth login        # GitHub.com > HTTPS > Y > Login with a web browser
+
+# 3. Baixar o app
+gh repo clone jpmelo031/priv-neutons
+cd priv-neutons
+
+# 4. Testar as fontes e abrir o app
+npm run checar-fontes
+npm start
+```
+
+Com o `npm start` rodando, abra o Chrome do celular em <http://localhost:3000> e use
+"Adicionar à tela inicial". Para o Android não fechar o Termux em segundo plano, rode
+`termux-wake-lock` antes do `npm start`. Para parar o app: `CTRL` + `C` no Termux.
+
+Para pegar atualizações depois: `cd priv-neutons && git pull`.
+
 ## Conferir se as fontes estão funcionando
 
 Endereços de RSS mudam de vez em quando. Para testar todos:
