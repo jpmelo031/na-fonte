@@ -137,12 +137,14 @@ export function interpretarFeed(xml, base) {
   return itens;
 }
 
-// Bytes -> texto, respeitando o charset (vários feeds brasileiros ainda usam ISO-8859-1).
+// Bytes -> texto, respeitando o charset (vários sites brasileiros ainda usam ISO-8859-1).
+// Ordem: cabeçalho HTTP, declaração do XML, <meta charset> do HTML, UTF-8.
 export function decodificarBytes(bytes, contentType = '') {
-  const inicio = new TextDecoder('latin1').decode(bytes.subarray(0, 200));
+  const inicio = new TextDecoder('latin1').decode(bytes.subarray(0, 4096));
   const charset =
     contentType.match(/charset=["']?([\w-]+)/i)?.[1] ??
     inicio.match(/<\?xml[^>]*encoding=["']([\w-]+)["']/i)?.[1] ??
+    inicio.match(/<meta[^>]+charset=["']?([\w-]+)/i)?.[1] ??
     'utf-8';
   try {
     return new TextDecoder(charset.toLowerCase()).decode(bytes);

@@ -28,6 +28,10 @@ do Brasil e de fora.
 | **Verificar** | Você cola o texto de um reel, post ou mensagem de WhatsApp. O app procura checagens e notícias sobre o assunto, aponta sinais típicos de boato (CAIXA ALTA, "URGENTE!!!", "compartilhe antes que apaguem", falta de fonte) e gera buscas prontas nas agências de checagem. |
 | **Fontes** | Lista de todas as fontes, com a data da última notícia de cada uma, e um filtro rápido para reels. |
 
+Tocar numa notícia abre o **modo leitura**: o texto da matéria aparece por cima do app, sem
+anúncios, menus, "leia também", chamadas de newsletter nem links para outras notícias. O botão
+"Abrir no site" continua lá para quando você quiser ir ao site (Ctrl+clique também abre direto).
+
 Nas abas Hoje e Lá fora dá para **filtrar por tema**: Política, Economia, Clima e ambiente,
 Ciência e tecnologia, Saúde, Educação, Segurança, Mundo, Esportes e Cultura.
 
@@ -37,12 +41,12 @@ assunto e aponta checagens. As regras são simples e estão escritas para serem 
 
 ## Como rodar
 
-Precisa só do [Node.js](https://nodejs.org) 22 ou mais novo. O projeto não usa nenhuma biblioteca
-externa, então não precisa de `npm install`.
+Precisa do [Node.js](https://nodejs.org) 22 ou mais novo.
 
 ```bash
 git clone https://github.com/jpmelo031/na-fonte.git
 cd na-fonte
+npm install
 npm start
 ```
 
@@ -62,12 +66,14 @@ pkg update && pkg upgrade        # responda "y" / Enter
 pkg install nodejs git
 git clone https://github.com/jpmelo031/na-fonte.git
 cd na-fonte
+npm install
 termux-wake-lock                 # impede o Android de fechar o Termux em segundo plano
 npm start
 ```
 
 Com o `npm start` rodando, abra o Chrome do celular em <http://localhost:3000> e use
-"Adicionar à tela inicial". Para parar: `CTRL` + `C` no Termux. Para atualizar: `git pull`.
+"Adicionar à tela inicial". Para parar: `CTRL` + `C` no Termux. Para atualizar: `git pull` e
+`npm install`.
 
 ## Fontes
 
@@ -115,6 +121,13 @@ funcionou.
   e no resumo (em português, inglês e espanhol). Senado e Câmara contam sempre como Política.
 - **Lá fora:** das fontes marcadas com `sobreBrasil` só entram matérias que citam o Brasil
   (Brasil/Brazil/Brésil, Lula, Bolsonaro, Amazônia, Rio, São Paulo, Petrobras...).
+- **Modo leitura:** baixa a página da matéria na hora em que você abre e passa pelo
+  [Readability](https://github.com/mozilla/readability) (o mesmo do modo leitura do Firefox), que
+  separa o texto de menus, anúncios e barras laterais. Depois um filtro próprio tira o que os sites
+  colocam *dentro* da matéria: parágrafos que são só link para outra notícia, "LEIA MAIS", "Siga o
+  canal", chamadas de assinatura e newsletter, créditos de foto, tags e posts de rede social
+  embutidos. Ele mostra o que o site entrega publicamente: quando a matéria é para assinantes e
+  vem cortada, o app avisa e oferece abrir no site. Só abre links que vieram dos feeds.
 
 ## Contribuir
 
@@ -124,6 +137,7 @@ Sugestões, correções de fontes e melhorias são bem-vindas, por issue ou pull
   [`src/fontes.js`](src/fontes.js).
 - **Tema errado:** as palavras de cada tema ficam em [`src/temas.js`](src/temas.js).
 - **Sinais de boato e agrupamento:** [`src/analise.js`](src/analise.js).
+- **Lixo que escapou no modo leitura:** os padrões ficam em [`src/leitura.js`](src/leitura.js).
 - Antes de enviar, rode `npm test`. Os testes usam feeds de exemplo locais e não acessam a internet.
 
 ```
@@ -133,6 +147,7 @@ src/feeds.js         baixa os feeds, com tolerância a falhas
 src/xml.js           lê RSS e Atom (inclusive feeds em ISO-8859-1)
 src/analise.js       agrupamento, checagens relacionadas e sinais de boato
 src/temas.js         temas do filtro e o filtro "fala do Brasil"
+src/leitura.js       modo leitura: extrai só o texto da matéria
 src/app.js           servidor HTTP e API (/api/noticias, /api/verificar)
 public/              a interface (HTML, CSS e JS puros)
 scripts/             checar-fontes
@@ -148,8 +163,9 @@ test/                testes automáticos
 
 ## Aviso
 
-O Na Fonte não tem relação com nenhum dos veículos, agências ou órgãos listados. Ele só lê os feeds
-RSS que eles publicam, mostra título e resumo e sempre leva para a matéria no site original. Todo o
+O Na Fonte não tem relação com nenhum dos veículos, agências ou órgãos listados. Ele lê os feeds
+RSS que eles publicam e, no modo leitura, a página da matéria que você abriu, na hora, só para você,
+sem guardar nem republicar nada. O link para a matéria original está sempre visível. Todo o
 conteúdo das notícias pertence aos seus autores.
 
 ## Licença

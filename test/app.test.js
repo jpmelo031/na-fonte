@@ -10,6 +10,7 @@ let servidorFeeds;
 let app;
 let base;
 let feedAForaDoAr = false;
+let visitasMateria = 0;
 
 before(async () => {
   // Servidor local que faz o papel dos sites de notícia.
@@ -38,6 +39,22 @@ before(async () => {
       )],
     };
     if (req.url === '/a.xml' && feedAForaDoAr) return res.writeHead(503).end();
+    // páginas das matérias, para o modo leitura
+    if (req.url === '/materia.html') {
+      visitasMateria++;
+      return res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' }).end(fixture('materia.html'));
+    }
+    if (req.url === '/proibido.html') return res.writeHead(403, { 'content-type': 'text/html' }).end('<p>Acesso negado</p>');
+    if (req.url === '/arquivo.pdf') return res.writeHead(200, { 'content-type': 'application/pdf' }).end('%PDF-1.4');
+    if (req.url === '/com-materia.xml') {
+      const base = `http://127.0.0.1:${servidorFeeds.address().port}`;
+      const item = (titulo, caminho) => `<item><title>${titulo}</title><link>${base}${caminho}</link><pubDate>Wed, 28 Oct 2026 11:00:00 GMT</pubDate></item>`;
+      return res.writeHead(200, { 'content-type': 'application/rss+xml' }).end(
+        `<rss><channel>${item('Matéria completa para o modo leitura', '/materia.html')}` +
+        `${item('Matéria de um site que bloqueia leitores', '/proibido.html')}` +
+        `${item('Documento oficial publicado em formato PDF', '/arquivo.pdf')}</channel></rss>`,
+      );
+    }
     const rota = rotas[req.url];
     if (!rota) return res.writeHead(500).end();
     res.writeHead(200, { 'content-type': rota[0] }).end(rota[1]);
@@ -52,6 +69,7 @@ before(async () => {
     { id: 'checador', nome: 'Checador X', categoria: 'checagem', site: 'https://checador.exemplo', feed: `${feeds}/checagem.xml` },
     { id: 'quebrado', nome: 'Fonte Quebrada', categoria: 'veiculo', site: 'https://quebrado.exemplo', feed: `${feeds}/nao-existe.xml` },
     { id: 'html', nome: 'Página Comum', categoria: 'veiculo', site: 'https://html.exemplo', feed: `${feeds}/pagina.html` },
+    { id: 'commateria', nome: 'Site com Matérias', categoria: 'veiculo', site: 'https://materias.exemplo', feed: `${feeds}/com-materia.xml` },
     { id: 'velho', nome: 'Feed Abandonado', categoria: 'veiculo', site: 'https://velho.exemplo', feed: `${feeds}/velho.xml` },
     { id: 'intl', nome: 'Jornal Estrangeiro', categoria: 'internacional', idioma: 'en', sobreBrasil: true, site: 'https://intl.exemplo', feed: `${feeds}/intl.xml` },
     { id: 'intlsembrasil', nome: 'Outro Estrangeiro', categoria: 'internacional', idioma: 'en', sobreBrasil: true, site: 'https://intl.exemplo', feed: `${feeds}/intl-sem-brasil.xml` },
@@ -184,4 +202,42 @@ test('não deixa sair da pasta public', async () => {
     const resposta = await fetch(`${base}${caminho}`);
     assert.ok([400, 404].includes(resposta.status), `${caminho} -> ${resposta.status}`);
   }
+});
+
+test('modo leitura: devolve só o texto da matéria e guarda no cache', async () => {
+  const dados = await (await fetch(`${base}/api/noticias`)).json();
+  const item = dados.noticias.find((n) => n.titulo === 'Matéria completa para o modo leitura');
+  const ler = () => fetch(`${base}/api/artigo?id=${item.id}`);
+
+  const resposta = await ler();
+  assert.equal(resposta.status, 200);
+  const artigo = await resposta.json();
+  assert.match(artigo.blocos[0].texto, /^O Senado aprovou nesta terça-feira/);
+  assert.ok(artigo.blocos.every((b) => !/LEIA TAMBÉM|Siga o canal|Tags:/.test(b.texto)));
+  assert.equal(artigo.autor, 'Maria Souza');
+
+  const visitas = visitasMateria;
+  assert.equal((await ler()).status, 200);
+  assert.equal(visitasMateria, visitas, 'a segunda leitura vem do cache');
+});
+
+test('modo leitura: erros viram mensagens claras', async () => {
+  const dados = await (await fetch(`${base}/api/noticias`)).json();
+  const id = (titulo) => dados.noticias.find((n) => n.titulo === titulo).id;
+
+  const bloqueado = await fetch(`${base}/api/artigo?id=${id('Matéria de um site que bloqueia leitores')}`);
+  assert.equal(bloqueado.status, 502);
+  assert.match((await bloqueado.json()).erro, /não deixou o app ler/);
+
+  const pdf = await fetch(`${base}/api/artigo?id=${id('Documento oficial publicado em formato PDF')}`);
+  assert.equal(pdf.status, 415);
+  assert.match((await pdf.json()).erro, /não é uma página de texto/);
+
+  const desconhecido = await fetch(`${base}/api/artigo?id=nao-existe`);
+  assert.equal(desconhecido.status, 404);
+});
+
+test('modo leitura: só abre links que vieram dos feeds, nunca um endereço qualquer', async () => {
+  const resposta = await fetch(`${base}/api/artigo?url=${encodeURIComponent('http://127.0.0.1:1/admin')}`);
+  assert.equal(resposta.status, 404);
 });

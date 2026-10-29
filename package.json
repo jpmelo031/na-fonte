@@ -16,5 +16,9 @@
   },
   "engines": {
     "node": ">=22"
+  },
+  "dependencies": {
+    "@mozilla/readability": "^0.6.0",
+    "linkedom": "^0.18.14"
   }
 }

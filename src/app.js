@@ -4,6 +4,7 @@ import { extname, join, normalize, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { baixarTodas } from './feeds.js';
 import { TEMAS } from './temas.js';
+import { criarLeitor, ErroLeitura } from './leitura.js';
 import {
   agruparAssuntos,
   analisarTexto,
@@ -32,6 +33,9 @@ const CABECALHOS_SEGURANCA = {
 export function criarApp({ fontes, intervaloMinutos = 15, fetch, timeoutMs, relogio = Date.now } = {}) {
   let ultimo = { itens: [], status: [], porFonte: {}, atualizadoEm: null };
   let resposta = null; // JSON de /api/noticias já pronto
+  // O modo leitura só abre links que vieram dos feeds (pelo id), nunca um endereço qualquer.
+  let itensPorId = new Map();
+  const ler = criarLeitor({ fetch, timeoutMs });
   let emAndamento = null;
   let temporizador = null;
 
@@ -67,6 +71,7 @@ export function criarApp({ fontes, intervaloMinutos = 15, fetch, timeoutMs, relo
     emAndamento = (async () => {
       const resultado = await baixarTodas(fontes, { anteriores: ultimo.porFonte, agora: relogio(), fetch, timeoutMs });
       ultimo = { ...resultado, atualizadoEm: new Date().toISOString() };
+      itensPorId = new Map(ultimo.itens.map((item) => [item.id, item]));
       resposta = montarResposta();
       const ok = resultado.status.filter((s) => s.ok).length;
       console.log(`[${new Date().toLocaleTimeString('pt-BR')}] ${ok}/${fontes.length} fontes atualizadas, ${resultado.itens.length} notícias`);
@@ -129,6 +134,18 @@ export function criarApp({ fontes, intervaloMinutos = 15, fetch, timeoutMs, relo
           noticias: buscarRelacionados(texto, [...resposta.noticias, ...resposta.internacional]),
           buscas: linksDeBusca(texto),
         });
+      }
+
+      if (url.pathname === '/api/artigo' && req.method === 'GET') {
+        if (!resposta) await atualizar();
+        const item = itensPorId.get(url.searchParams.get('id') ?? '');
+        if (!item) return enviarJson(res, 404, { erro: 'Essa notícia não está mais na lista do app. Abra no site.' });
+        try {
+          return enviarJson(res, 200, await ler(item));
+        } catch (erro) {
+          if (erro instanceof ErroLeitura) return enviarJson(res, erro.status, { erro: erro.message });
+          throw erro;
+        }
       }
 
       if (req.method === 'GET' || req.method === 'HEAD') return await servirArquivo(res, url.pathname);

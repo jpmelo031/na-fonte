@@ -6,6 +6,8 @@ const NOMES_VEREDITO = { falso: 'Falso', enganoso: 'Enganoso', verdadeiro: 'Verd
 const ABAS = ['hoje', 'lafora', 'checagens', 'verificar', 'fontes'];
 
 let dados = null;
+// Notícias que o modo leitura pode abrir, pelo id.
+const itensConhecidos = new Map();
 const filtros = { noticias: 'todas', checagens: 'todas', temaHoje: 'todos', temaLafora: 'todos' };
 
 // O tema escolhido fica guardado neste aparelho (se o navegador deixar).
@@ -36,6 +38,12 @@ function el(tag, atributos = {}, ...filhos) {
 
 function linkExterno(href, ...filhos) {
   return el('a', { href, target: '_blank', rel: 'noopener noreferrer' }, ...filhos);
+}
+
+// Link de notícia: abre no modo leitura. Com Ctrl/Shift ou botão do meio, abre o site.
+function linkLeitura(item, ...filhos) {
+  itensConhecidos.set(item.id, item);
+  return el('a', { href: item.link, 'data-ler': item.id, target: '_blank', rel: 'noopener noreferrer' }, ...filhos);
 }
 
 const relativo = new Intl.RelativeTimeFormat('pt-BR', { numeric: 'auto' });
@@ -109,18 +117,18 @@ function cartaoAssunto(assunto) {
       assunto.temFonteOficial && el('span', { class: 'selo selo-oficial' }, 'Inclui fonte oficial'),
       assunto.checagens.length > 0 && el('span', { class: 'selo selo-checagem' }, 'Tem checagem'),
     ),
-    el('h3', {}, linkExterno(principal.link, assunto.titulo)),
+    el('h3', {}, linkLeitura(principal, assunto.titulo)),
     el('details', {},
       el('summary', {}, 'Ver como cada fonte noticiou'),
       el('ul', {}, assunto.itens.map((item) =>
-        el('li', {}, seloCategoria(item.categoria, item.fonteNome), ' ', linkExterno(item.link, item.titulo)),
+        el('li', {}, seloCategoria(item.categoria, item.fonteNome), ' ', linkLeitura(item, item.titulo)),
       )),
     ),
     assunto.checagens.map((checagem) =>
       el('div', { class: 'checagem-relacionada' },
         seloVeredito(checagem.veredito), ' ',
         el('strong', {}, `${checagem.fonteNome}: `),
-        linkExterno(checagem.link, checagem.titulo),
+        linkLeitura(checagem, checagem.titulo),
       ),
     ),
   );
@@ -136,7 +144,7 @@ function cartaoNoticia(item) {
       rotuloTemas(item.temas),
       item.alarmista && el('span', { class: 'selo selo-alarmista', title: 'Título com cara de sensacionalismo. Leia a matéria antes de tirar conclusões.' }, 'Título sensacionalista?'),
     ),
-    el('h3', {}, linkExterno(item.link, item.titulo)),
+    el('h3', {}, linkLeitura(item, item.titulo)),
     item.resumo && el('p', { class: 'resumo' }, item.resumo),
     traduzir && el('span', { class: 'traduzir' }, traduzir),
   );
@@ -185,7 +193,7 @@ function cartaoChecagem(item) {
       seloCategoria('checagem', item.fonteNome),
       el('span', {}, haQuanto(item.data)),
     ),
-    el('h3', {}, linkExterno(item.link, item.titulo)),
+    el('h3', {}, linkLeitura(item, item.titulo)),
     item.resumo && el('p', { class: 'resumo' }, item.resumo),
   );
 }
@@ -250,7 +258,7 @@ function renderizarResultado({ analise, checagens, noticias, buscas }) {
       el('h3', {}, 'Checagens sobre o assunto'),
       checagens.length
         ? el('div', { class: 'lista' }, checagens.map((c) =>
-            el('div', {}, el('div', { class: 'meta' }, seloVeredito(c.veredito), seloCategoria('checagem', c.fonteNome), el('span', {}, haQuanto(c.data))), linkExterno(c.link, c.titulo)),
+            el('div', {}, el('div', { class: 'meta' }, seloVeredito(c.veredito), seloCategoria('checagem', c.fonteNome), el('span', {}, haQuanto(c.data))), linkLeitura(c, c.titulo)),
           ))
         : el('p', { class: 'discreto' }, 'Nenhuma checagem recente fala disso. Não quer dizer que é verdade nem mentira: pode ser um assunto novo. Use as buscas abaixo.'),
     ),
@@ -258,7 +266,7 @@ function renderizarResultado({ analise, checagens, noticias, buscas }) {
       el('h3', {}, 'O que veículos e fontes oficiais estão dizendo'),
       noticias.length
         ? el('div', { class: 'lista' }, noticias.map((n) =>
-            el('div', {}, el('div', { class: 'meta' }, seloCategoria(n.categoria, n.fonteNome), el('span', {}, haQuanto(n.data))), linkExterno(n.link, n.titulo)),
+            el('div', {}, el('div', { class: 'meta' }, seloCategoria(n.categoria, n.fonteNome), el('span', {}, haQuanto(n.data))), linkLeitura(n, n.titulo)),
           ))
         : el('p', { class: 'discreto' }, 'Nenhuma notícia recente das fontes do app sobre isso. Se fosse algo grande e verdadeiro, provavelmente alguém já teria noticiado.'),
     ),
@@ -297,6 +305,107 @@ async function verificar(evento) {
 }
 
 // ---------------------------------------------------------------------------
+// Modo leitura
+// ---------------------------------------------------------------------------
+
+const leitor = document.getElementById('leitor');
+let pedidoDeLeitura = 0;
+
+function textoDaMateria(blocos) {
+  const saida = [];
+  let lista = null;
+  for (const bloco of blocos) {
+    if (bloco.tipo === 'item') {
+      if (!lista) saida.push((lista = el('ul')));
+      lista.append(el('li', {}, bloco.texto));
+      continue;
+    }
+    lista = null;
+    if (bloco.tipo === 'subtitulo') saida.push(el('h3', {}, bloco.texto));
+    else if (bloco.tipo === 'citacao') saida.push(el('blockquote', {}, bloco.texto));
+    else saida.push(el('p', {}, bloco.texto));
+  }
+  return saida;
+}
+
+function renderizarLeitor(item, { artigo, erro } = {}) {
+  const carregando = !artigo && !erro;
+  const minutos = artigo ? Math.max(1, Math.round(artigo.caracteres / 1100)) : null;
+  const partes = [
+    el('div', { class: 'meta' },
+      seloCategoria(item.categoria, item.fonteNome),
+      seloIdioma(item),
+      el('span', {}, haQuanto(item.data)),
+      minutos && el('span', {}, `· ${minutos} min de leitura`),
+    ),
+    el('h2', { id: 'leitor-titulo' }, item.titulo),
+    artigo?.autor && el('p', { class: 'leitor-autor' }, `Por ${artigo.autor}`),
+    artigo?.paraAssinantes && el('p', { class: 'leitor-aviso' }, 'Matéria para assinantes: o site só liberou uma parte do texto. O restante está no site.'),
+    artigo && !artigo.paraAssinantes && artigo.possivelmenteIncompleto &&
+      el('p', { class: 'leitor-aviso' }, 'O texto veio curto: pode ser só o começo da matéria.'),
+    !artigo && item.resumo && el('p', { class: 'leitor-resumo' }, item.resumo),
+    carregando && el('p', { class: 'leitor-carregando' }, 'Carregando o texto da matéria…'),
+    erro && el('p', { class: 'vazio' }, erro),
+    artigo && el('div', { class: 'leitor-texto' }, textoDaMateria(artigo.blocos)),
+    !carregando && el('footer', { class: 'leitor-rodape' },
+      artigo && el('p', {}, `Texto extraído de ${artigo.site ?? 'site original'} pelo modo leitura, sem anúncios nem links. O conteúdo é de ${item.fonteNome}.`),
+      el('div', { class: 'buscas' }, linkExterno(item.link, 'Abrir a matéria no site'), linkTraduzir(item)),
+    ),
+  ];
+  document.getElementById('leitor-conteudo').replaceChildren(...partes.filter(Boolean));
+}
+
+function abrirLeitor(id) {
+  const item = itensConhecidos.get(id);
+  if (!item) return false;
+  document.getElementById('leitor-site').href = item.link;
+  renderizarLeitor(item);
+  if (!leitor.open) {
+    leitor.showModal();
+    document.body.classList.add('lendo');
+    history.pushState({ leitor: true }, '');
+  }
+  leitor.scrollTop = 0;
+
+  const pedido = ++pedidoDeLeitura;
+  fetch(`api/artigo?id=${encodeURIComponent(id)}`)
+    .then(async (resposta) => {
+      const corpo = await resposta.json();
+      if (!resposta.ok) throw new Error(corpo.erro ?? 'Não foi possível abrir a matéria.');
+      return corpo;
+    })
+    .then((artigo) => pedido === pedidoDeLeitura && renderizarLeitor(item, { artigo }))
+    .catch((erro) => {
+      const mensagem = erro instanceof TypeError ? 'Sem conexão com o servidor do app.' : erro.message;
+      if (pedido === pedidoDeLeitura) renderizarLeitor(item, { erro: mensagem });
+    });
+  return true;
+}
+
+// Fechar volta uma posição no histórico, assim o "voltar" do celular também fecha o leitor.
+function fecharLeitor() {
+  if (history.state?.leitor) history.back();
+  else leitor.close();
+}
+
+document.addEventListener('click', (evento) => {
+  const link = evento.target.closest('a[data-ler]');
+  if (!link || evento.button !== 0 || evento.ctrlKey || evento.metaKey || evento.shiftKey || evento.altKey) return;
+  if (abrirLeitor(link.dataset.ler)) evento.preventDefault();
+});
+document.getElementById('leitor-fechar').addEventListener('click', fecharLeitor);
+leitor.addEventListener('click', (evento) => {
+  if (evento.target === leitor) fecharLeitor(); // toque no fundo escuro
+});
+leitor.addEventListener('close', () => {
+  document.body.classList.remove('lendo');
+  if (history.state?.leitor) history.back(); // fechou com Esc
+});
+window.addEventListener('popstate', () => {
+  if (leitor.open) leitor.close();
+});
+
+// ---------------------------------------------------------------------------
 // Navegação, filtros e carregamento
 // ---------------------------------------------------------------------------
 
@@ -333,6 +442,7 @@ function montarFiltroDeTemas(idGrupo, chave) {
 }
 
 function renderizarTudo() {
+  itensConhecidos.clear();
   montarFiltroDeTemas('filtro-tema-hoje', 'temaHoje');
   montarFiltroDeTemas('filtro-tema-lafora', 'temaLafora');
   renderizarHoje();
