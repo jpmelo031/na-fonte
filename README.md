@@ -77,8 +77,7 @@ Com o `npm start` rodando, abra o Chrome do celular em <http://localhost:3000> e
 
 **No celular do [The Far Fire](https://github.com/jpmelo031/the-far-fire)**, onde o app roda como a
 fogueira `na-fonte`, quem atualiza é o `scripts/atualizar.sh`, a partir de um clone em `~/src/na-fonte`:
-ele baixa a versão nova, roda os testes, troca o app e reacende a fogueira (se a versão nova não
-responder, a anterior volta).
+ele faz `git pull`, copia o app pra `~/na-fonte/app` e reacende a fogueira.
 
 ```bash
 bash ~/src/na-fonte/scripts/atualizar.sh
