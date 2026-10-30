@@ -1,10 +1,10 @@
-import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { extname, join, normalize, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { baixarTodas } from './feeds.js';
 import { TEMAS } from './temas.js';
 import { criarLeitor, ErroLeitura } from './leitura.js';
+import { criarServidor } from './https.js';
 import {
   agruparAssuntos,
   analisarTexto,
@@ -30,7 +30,7 @@ const CABECALHOS_SEGURANCA = {
   'referrer-policy': 'no-referrer',
 };
 
-export function criarApp({ fontes, intervaloMinutos = 15, fetch, timeoutMs, relogio = Date.now } = {}) {
+export function criarApp({ fontes, intervaloMinutos = 15, fetch, timeoutMs, relogio = Date.now, tls = null } = {}) {
   let ultimo = { itens: [], status: [], porFonte: {}, atualizadoEm: null };
   let resposta = null; // JSON de /api/noticias já pronto
   // O modo leitura só abre links que vieram dos feeds (pelo id), nunca um endereço qualquer.
@@ -115,7 +115,8 @@ export function criarApp({ fontes, intervaloMinutos = 15, fetch, timeoutMs, relo
     }
   }
 
-  const servidor = createServer(async (req, res) => {
+  // Com tls (servidor.key, servidor.crt e ca.crt), o app abre em https:// (veja src/https.js).
+  const servidor = criarServidor(async (req, res) => {
     try {
       const url = new URL(req.url, 'http://localhost');
 
@@ -156,7 +157,7 @@ export function criarApp({ fontes, intervaloMinutos = 15, fetch, timeoutMs, relo
       console.error(erro);
       enviarJson(res, 500, { erro: 'Erro interno.' });
     }
-  });
+  }, tls);
 
   return {
     servidor,
@@ -169,6 +170,7 @@ export function criarApp({ fontes, intervaloMinutos = 15, fetch, timeoutMs, relo
     },
     parar() {
       clearInterval(temporizador);
+      servidor.fecharConexoes?.();
       return new Promise((resolve) => servidor.close(resolve));
     },
   };

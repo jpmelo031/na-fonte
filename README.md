@@ -83,6 +83,13 @@ ele faz `git pull`, copia o app pra `~/na-fonte/app` e reacende a fogueira.
 bash ~/src/na-fonte/scripts/atualizar.sh
 ```
 
+**HTTPS (para instalar como aplicativo de verdade):** com `HTTPS_DIR` apontando para uma pasta com
+`servidor.key`, `servidor.crt` e `ca.crt`, o app abre em `https://` na mesma porta, e quem abre por
+`http://` vê como instalar o certificado no aparelho. No celular do The Far Fire o certificado é um só
+para todos os apps, em `~/https` (criado pelo `termux/https.sh` do Minhas Finanças), e o
+`scripts/atualizar.sh` liga ele aqui. Depois, abra `https://172.24.159.26:3000` e use
+**⋮ → Instalar app**.
+
 ## Fontes
 
 A lista completa, com os endereços dos feeds, está em [`src/fontes.js`](src/fontes.js).
