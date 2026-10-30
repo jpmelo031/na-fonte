@@ -75,6 +75,15 @@ Com o `npm start` rodando, abra o Chrome do celular em <http://localhost:3000> e
 "Adicionar à tela inicial". Para parar: `CTRL` + `C` no Termux. Para atualizar: `git pull` e
 `npm install`.
 
+**No celular do [The Far Fire](https://github.com/jpmelo031/the-far-fire)**, onde o app roda como a
+fogueira `na-fonte`, quem atualiza é o `scripts/atualizar.sh`, a partir de um clone em `~/src/na-fonte`:
+ele baixa a versão nova, roda os testes, troca o app e reacende a fogueira (se a versão nova não
+responder, a anterior volta).
+
+```bash
+bash ~/src/na-fonte/scripts/atualizar.sh
+```
+
 ## Fontes
 
 A lista completa, com os endereços dos feeds, está em [`src/fontes.js`](src/fontes.js).
@@ -150,7 +159,7 @@ src/temas.js         temas do filtro e o filtro "fala do Brasil"
 src/leitura.js       modo leitura: extrai só o texto da matéria
 src/app.js           servidor HTTP e API (/api/noticias, /api/verificar)
 public/              a interface (HTML, CSS e JS puros)
-scripts/             checar-fontes
+scripts/             checar-fontes e atualizar (no celular do The Far Fire)
 test/                testes automáticos
 ```
 
